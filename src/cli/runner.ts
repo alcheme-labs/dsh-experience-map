@@ -29,7 +29,10 @@ import {
 import { markdownDigest } from '../domain/markdown.js'
 import { publicFailure } from '../errors.js'
 import { brandedId } from '../ids.js'
+import { assertSupportedNodeVersion } from '../node-compatibility.js'
 import type { ExperienceCliSpec } from './startup.js'
+
+assertSupportedNodeVersion()
 
 /** Stable Cordis plugin name. */
 export const name = 'experience-map-cli-runner'

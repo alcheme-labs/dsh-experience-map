@@ -24,10 +24,10 @@ Experience Map 是一个面向 DeepSeek Harness 的本地优先经验插件。�
 - 自动建议检测和自动召回默认开启，但保存、Plan 批准和工具批准相互独立；自动工具执行关闭。
 - 自动检测、分组和默认召回无需外部模型。可选本地语义模型和外部 Candidate 提炼都由用户单独配置。
 
-快速安装（首发 GitHub Release 的预构建包）：
+快速安装（npm 公开测试版）：
 
 ```sh
-dsh plugin --profile web add https://github.com/alcheme-labs/dsh-experience-map/releases/download/v0.1.0-beta.1/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
 dsh web
 ```
 

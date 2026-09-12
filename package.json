@@ -1,9 +1,12 @@
 {
-  "name": "@alcheme/dsh-experience-map",
-  "version": "0.1.0-beta.1",
+  "name": "dsh-experience-map",
+  "version": "0.1.0-beta.3",
   "description": "Evidence-governed experience memory for DeepSeek Harness",
   "author": "杭州星原驱动科技有限公司",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://github.com/alcheme-labs/dsh-experience-map#readme",
   "repository": {
     "type": "git",
@@ -67,7 +70,6 @@
   },
   "files": [
     "lib",
-    "check-node-version.mjs",
     "cordis.patch.yml",
     "README.md",
     "README.zh.md",
@@ -78,7 +80,6 @@
     "LICENSE"
   ],
   "scripts": {
-    "preinstall": "node check-node-version.mjs",
     "build": "node build.mjs && pnpm run build:types",
     "build:types": "tsc -p tsconfig.host.json --emitDeclarationOnly --outDir lib/types && tsc -p tsconfig.client.json --emitDeclarationOnly --outDir lib/types",
     "typecheck": "tsc -p tsconfig.host.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.tests.json --noEmit",

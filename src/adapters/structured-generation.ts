@@ -102,7 +102,7 @@ export class LoggedStructuredGeneration {
         session.append('system/message', {
           turn: 1,
           step: 1,
-          message: createSystemMessage(request.system, '@alcheme/dsh-experience-map'),
+          message: createSystemMessage(request.system, 'dsh-experience-map'),
         }, { surfaceOp: 'append' })
         session.append('user/message', request.message, { surfaceOp: 'append' })
         session.append('request/header', { header, reason: 'initial' })

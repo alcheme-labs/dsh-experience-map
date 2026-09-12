@@ -29,7 +29,7 @@ export type ExperienceErrorCode =
   | 'composition_cycle'
   | 'internal'
 
-const EXPERIENCE_ERROR_BRAND = Symbol.for('@alcheme/dsh-experience-map/ExperienceError')
+const EXPERIENCE_ERROR_BRAND = Symbol.for('dsh-experience-map/ExperienceError')
 const EXPERIENCE_ERROR_CODES: ReadonlySet<string> = new Set<ExperienceErrorCode>([
   'database_foreign_application',
   'database_newer_schema',

@@ -51,7 +51,7 @@ export class TaskFingerprintLlm {
       system: 'Extract discovery fields for Experience matching. Do not decide eligibility, approval, or execution.',
       message: createUserMessage({
         content: [{ type: 'text', text: JSON.stringify(task) }],
-        source: { kind: 'plugin', plugin: '@alcheme/dsh-experience-map', form: 'recall' },
+        source: { kind: 'plugin', plugin: 'dsh-experience-map', form: 'recall' },
       }),
       tool: taskFingerprintTool(),
       ...(signal === undefined ? {} : { signal }),

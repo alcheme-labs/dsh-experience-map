@@ -1,6 +1,9 @@
 import { Command } from 'commander'
 import type { Context } from '@deepseek-ai/cordis'
 import { parseCmdline } from '@deepseek-ai/dsh-cmdline'
+import { assertSupportedNodeVersion } from '../node-compatibility.js'
+
+assertSupportedNodeVersion()
 
 /** Frozen management operation produced synchronously from launcher argv. */
 export type ExperienceCliSpec =

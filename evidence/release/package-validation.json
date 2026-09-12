@@ -1,62 +1,62 @@
 {
-  "schemaVersion": "experience-open-source-package-validation-v1",
-  "capturedAt": "2026-09-12T17:17:18+08:00",
-  "status": "passed_prepublication",
+  "schemaVersion": "experience-open-source-package-validation-v2",
+  "capturedAt": "2026-09-12T19:08:26+08:00",
+  "status": "passed_registry_and_installed_runtime",
   "environment": {
     "node": "v22.23.1",
     "packageManager": "pnpm@11.7.0",
-    "baseCommit": "77ee73d75adcb0e8d091f8bfca76721ea524888e"
+    "sourceBaseCommit": "e97e4850e14655b131eda205e5f90a55da19aa7b"
   },
   "sourceVerification": {
     "typecheck": "passed",
     "testFiles": 75,
-    "tests": 563,
+    "tests": 564,
     "build": "passed",
     "docsTestFiles": 2,
     "docsTests": 13
   },
   "publicBoundaryVerification": {
-    "publicFileCount": 233,
+    "publicFileCount": 232,
     "releaseBoundaryTests": 5,
     "exportManifestCreated": true,
     "privateHistoryIncluded": false,
-    "cleanSnapshotReleaseCheck": {
-      "typecheck": "passed",
-      "testFiles": 75,
-      "tests": 563,
-      "build": "passed",
-      "docsTestFiles": 1,
-      "docsTests": 5,
-      "productionDependencyAudit": "no known vulnerabilities"
-    }
+    "publicReleaseCheck": "passed"
   },
   "npmTarball": {
-    "package": "@alcheme/dsh-experience-map@0.1.0-beta.1",
-    "file": "alcheme-dsh-experience-map-0.1.0-beta.1.tgz",
-    "sha256": "e0af9ca7da39f8fb2c4ea153a6c11c5c45bfbc81c6ab04359447ac93342d3f1c",
-    "bytes": 1195364,
-    "unpackedBytes": 5808700,
-    "entryCount": 166,
+    "package": "dsh-experience-map@0.1.0-beta.3",
+    "file": "dsh-experience-map-0.1.0-beta.3.tgz",
+    "sha256": "c14bccedb122f969324095e57906fa4c1ecec390d82f50d8513a2e62306636c9",
+    "npmShasum": "f3b3cef84ed91a378161054150fc8cca88eddac6",
+    "bytes": 1211545,
+    "unpackedBytes": 5814759,
+    "entryCount": 167,
     "forbiddenDevelopmentOrModelEntries": 0,
-    "hostAndCliExportsLoaded": true,
+    "installLifecycleScripts": "absent",
     "packedArtifactSecretScan": "passed"
   },
-  "freshDefaultConsumerInstall": {
+  "registryReadback": {
+    "published": true,
+    "latest": "0.1.0-beta.3",
+    "beta": "0.1.0-beta.3",
+    "downloadedTarballSha256Matches": true
+  },
+  "freshDshProfileInstall": {
     "installedPackageCount": 2,
-    "requiredRuntimeDependencies": {
-      "minisearch": "7.2.0"
-    },
-    "transformersJsInstalled": false,
-    "transformersJsOptionalPeer": true,
-    "preinstallNodeCheck": "passed"
+    "profiles": [
+      "web",
+      "headless",
+      "management"
+    ],
+    "ignoredBuildScriptsError": false,
+    "webHostReadback": "Experience Map enabled and running; settings rendered",
+    "headlessReadback": "help loaded and dump-config contained the experience-map Host row"
   },
   "hostIntegrity": {
     "deepseekHarnessTrackedChangesIntroduced": 0,
     "preexistingDeepseekHarnessUntrackedDocumentsPreserved": 9
   },
   "notPerformed": [
-    "no public Git remote was created or pushed",
-    "no npm version was published",
-    "no existing private Git history was rewritten"
+    "the official DSH community Discussion was not posted",
+    "no existing private Git history was rewritten or published"
   ]
 }

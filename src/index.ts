@@ -33,6 +33,7 @@ import {
 } from './application/experience-projection-worker.js'
 import { WebUsageVerifier } from './adapters/web-verifier.js'
 import { ExperienceError } from './errors.js'
+import { assertSupportedNodeVersion } from './node-compatibility.js'
 import { assertExperienceStoreInvariants } from './invariant.js'
 import type { CandidateId, ExperienceVersionId, ReceiptId, ExperienceRelationId, OverrideDecisionId } from './ids.js'
 import { ExperienceDatabase, type DatabaseConfig } from './persistence/database.js'
@@ -105,6 +106,8 @@ import type {
   SuggestionSaveDomainReceipt,
   ExperienceRetrievalProjectionView,
 } from './types.js'
+
+assertSupportedNodeVersion()
 
 export type { TrustedCommandOrigin } from './application/actor-resolver.js'
 export type {

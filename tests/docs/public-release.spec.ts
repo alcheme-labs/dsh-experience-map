@@ -24,7 +24,7 @@ describe('public release boundary', () => {
       readonly keywords?: readonly string[]
     }
     expect(packageJson.author).toBe('杭州星原驱动科技有限公司')
-    expect(packageJson.version).toBe('0.1.0-beta.1')
+    expect(packageJson.version).toBe('0.1.0-beta.3')
     expect(packageJson.repository?.url).toBe('git+https://github.com/alcheme-labs/dsh-experience-map.git')
     expect(packageJson.optionalDependencies?.['@huggingface/transformers']).toBeUndefined()
     expect(packageJson.peerDependencies?.['@huggingface/transformers']).toBe('4.2.0')
@@ -81,8 +81,8 @@ describe('public release boundary', () => {
     expect(evidenceDocument).toContain('不是节省比例承诺')
   })
 
-  it('uses the immutable beta Release asset in public installation guidance', async () => {
-    const releaseAsset = 'https://github.com/alcheme-labs/dsh-experience-map/releases/download/v0.1.0-beta.1/alcheme-dsh-experience-map-0.1.0-beta.1.tgz'
+  it('uses the published unscoped beta package in public installation guidance', async () => {
+    const packageSpec = 'dsh-experience-map@0.1.0-beta.3'
     const documents = await Promise.all([
       'README.md',
       'README.zh.md',
@@ -92,7 +92,7 @@ describe('public release boundary', () => {
     ].map(path => readFile(resolve(root, path), 'utf8')))
 
     for (const document of documents) {
-      expect(document).toContain(releaseAsset)
+      expect(document).toContain(packageSpec)
       expect(document).not.toContain('<RELEASE_TARBALL_URL_OR_LOCAL_PATH>')
     }
   })

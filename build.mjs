@@ -3,7 +3,7 @@ import { readFile, rm } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
 import { transform } from 'lightningcss'
 
-const packageId = '@alcheme/dsh-experience-map'
+const packageId = 'dsh-experience-map'
 const dshExternals = ['@deepseek-ai/*', '@huggingface/transformers']
 
 const cssModules = {

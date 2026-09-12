@@ -4,16 +4,15 @@ Experience Map locally inspects recently completed DeepSeek Harness (DSH) Sessio
 
 ## 1. Install
 
-Download the prebuilt `0.1.0-beta.1` package from GitHub Releases so installation does not execute repository build scripts on your machine:
+Install the unscoped `0.1.0-beta.3` package from npm; installation does not execute repository build scripts on your machine:
 
 ```sh
-curl -fLO https://github.com/alcheme-labs/dsh-experience-map/releases/download/v0.1.0-beta.1/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
 ```
 
-Install it into a Web profile:
+Then start the Web profile:
 
 ```sh
-dsh plugin --profile web add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
 dsh web
 ```
 
@@ -53,14 +52,14 @@ To change them, open `Settings → Plugins → Plugin configuration → Experien
 Suggestion detection and recall remain enabled when the Bundle is installed into the headless profile:
 
 ```sh
-dsh plugin --profile headless add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
 dsh --profile headless "check the current tests and repair the same class of failure"
 ```
 
 A terminal has no save button, so persistence, dismissal, and Plan approval remain explicit management commands. Create a dedicated profile:
 
 ```sh
-dsh plugin --profile experience-management add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile experience-management add dsh-experience-map@0.1.0-beta.3
 ```
 
 Append this layer to `$DSH_HOME/profiles/experience-management/cordis.patch.yml`; do not overwrite existing user configuration:
@@ -68,9 +67,9 @@ Append this layer to `$DSH_HOME/profiles/experience-management/cordis.patch.yml`
 ```yaml
 - insert:
     - id: experience-map-cli-startup
-      name: '@alcheme/dsh-experience-map/cli/startup'
+      name: 'dsh-experience-map/cli/startup'
     - id: experience-map-cli-runner
-      name: '@alcheme/dsh-experience-map/cli/runner'
+      name: 'dsh-experience-map/cli/runner'
 ```
 
 Read canonical state:

@@ -7,7 +7,7 @@ kind: "package-bundle"
 
 English | [中文](README.zh.md)
 
-> Status: `0.1.0-beta.1` public beta. The package is distributed as a prebuilt GitHub Release tarball and is not published to npm yet.
+> Status: `0.1.0-beta.3` public beta, published as the unscoped npm package `dsh-experience-map` and as a matching GitHub Release tarball.
 
 ## Summary
 
@@ -86,13 +86,14 @@ By default, the Bundle locally scans bounded intervals from recently completed S
 
 ### Install the public beta
 
-Download the prebuilt Release package, add it to a Web profile, and start that profile:
+Add the public npm package to a Web profile and start that profile:
 
 ```sh
-curl -fLO https://github.com/alcheme-labs/dsh-experience-map/releases/download/v0.1.0-beta.1/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
-dsh plugin --profile web add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
 dsh web
 ```
+
+The matching prebuilt tarball is also available from the immutable [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3).
 
 When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To build the same package from source instead:
 
@@ -136,13 +137,13 @@ Database ownership and SQLite pragmas, the optional historical and verified-outc
 The Host plugin can load without Browser services, so CLI/headless profiles remain valid:
 
 ```sh
-pnpm dsh plugin --profile headless add /absolute/path/to/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+pnpm dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
 pnpm dsh --profile headless "your task"
 ```
 
 Automatic Session suggestion detection and Experience recall are enabled by default. Saving a suggestion remains an explicit owner decision, and `defaultMustUseExperience` defaults to `false`: a match may prepare a Plan, but it does not force the task to use it. Context is injected only after the current Plan is approved; automatic tool execution remains disabled.
 
-Management commands are intentionally excluded from ordinary Web and headless profiles. A dedicated management profile can mount `@alcheme/dsh-experience-map/cli/startup` and `@alcheme/dsh-experience-map/cli/runner`, then query the same Host-owned state:
+Management commands are intentionally excluded from ordinary Web and headless profiles. A dedicated management profile can mount `dsh-experience-map/cli/startup` and `dsh-experience-map/cli/runner`, then query the same Host-owned state:
 
 ```sh
 pnpm dsh --profile experience-management experience status
@@ -258,7 +259,7 @@ The Bundle does not modify the static system prompt. Candidate proposal Sessions
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- The package is not published to npm. Installation uses the prebuilt tarball from GitHub Releases.
+- The npm release uses the unscoped package name `dsh-experience-map`; supported installation is pinned to the verified `0.1.0-beta.3` artifact.
 - Automatic admission is disabled by default. All six learning and automation capabilities ship at `shadow`; no evaluation promotes them automatically.
 - SQLite remains the canonical store; no graph database is required. Retrieval can optionally use a pinned local Transformers.js embedding artifact and otherwise keeps the lexical fallback. Transformers.js is an explicit optional peer while current upstream native dependency advisories remain open.
 - Causal records remain evidence-graded candidates unless stronger evidence is reviewed; the Bundle is not a general causal-inference engine.

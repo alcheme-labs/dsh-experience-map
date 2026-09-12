@@ -1,6 +1,6 @@
 # Only the explicit management Profile owns command parsing and process exit.
 - insert:
     - id: experience-map-cli-startup
-      name: '@alcheme/dsh-experience-map/cli/startup'
+      name: 'dsh-experience-map/cli/startup'
     - id: experience-map-cli-runner
-      name: '@alcheme/dsh-experience-map/cli/runner'
+      name: 'dsh-experience-map/cli/runner'

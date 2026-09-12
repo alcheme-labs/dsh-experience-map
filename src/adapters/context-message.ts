@@ -4,7 +4,7 @@ import type { ContextSnapshotView } from '../types.js'
 /** Durable provenance carried beside every model-visible Experience message. */
 export interface ExperienceMessageSource {
   readonly kind: 'experience'
-  readonly plugin: '@alcheme/dsh-experience-map'
+  readonly plugin: 'dsh-experience-map'
   readonly lifecycle: 'active' | 'inactive'
   readonly usageId: string
   readonly contextSnapshotId: string
@@ -31,7 +31,7 @@ export function createExperienceContextMessage(
     content: [{ type: 'text', text: content }],
     source: {
       kind: 'experience',
-      plugin: '@alcheme/dsh-experience-map',
+      plugin: 'dsh-experience-map',
       lifecycle: 'active',
       usageId: String(snapshot.usageId),
       contextSnapshotId: String(snapshot.contextSnapshotId),
@@ -53,7 +53,7 @@ export function createExperienceRetirementMessage(
     content: [{ type: 'text', text: `<experience-context-inactive retirement="${contextRetirementId}" />` }],
     source: {
       kind: 'experience',
-      plugin: '@alcheme/dsh-experience-map',
+      plugin: 'dsh-experience-map',
       lifecycle: 'inactive',
       usageId: delivery.usageId,
       contextSnapshotId: delivery.contextSnapshotId,

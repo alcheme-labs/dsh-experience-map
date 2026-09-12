@@ -1,7 +1,7 @@
 # One production Host owner; the Browser face is discovered from this root row.
 - insert:
     - id: experience-map
-      name: '@alcheme/dsh-experience-map'
+      name: 'dsh-experience-map'
       config:
         databasePath: !!js dshHomePath('experience', 'experience.sqlite')
         journalMode: wal

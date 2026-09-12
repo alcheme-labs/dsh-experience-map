@@ -4,16 +4,15 @@ Experience Map 会在 DeepSeek Harness（DSH）完成任务后，本地检查最
 
 ## 1. 安装
 
-从 GitHub Releases 下载预构建的 `0.1.0-beta.1` 安装包，安装时不需要在本机执行仓库里的构建脚本：
+从 npm 安装无 scope 的 `0.1.0-beta.3` 包，安装时不需要在本机执行仓库里的构建脚本：
 
 ```sh
-curl -fLO https://github.com/alcheme-labs/dsh-experience-map/releases/download/v0.1.0-beta.1/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
 ```
 
-把安装包添加到 Web Profile：
+然后启动 Web Profile：
 
 ```sh
-dsh plugin --profile web add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
 dsh web
 ```
 
@@ -55,14 +54,14 @@ dsh web
 安装到 headless Profile 后，Session 建议检测和 Experience 召回同样默认开启：
 
 ```sh
-dsh plugin --profile headless add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
 dsh --profile headless "检查当前项目的测试并修复同类失败"
 ```
 
 终端没有“点击保存”操作，因此保存、忽略和 Plan 批准仍通过显式管理命令完成。先创建独立管理 Profile：
 
 ```sh
-dsh plugin --profile experience-management add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile experience-management add dsh-experience-map@0.1.0-beta.3
 ```
 
 把下面两行追加到 `$DSH_HOME/profiles/experience-management/cordis.patch.yml`；不要覆盖其中已有的用户配置：
@@ -70,9 +69,9 @@ dsh plugin --profile experience-management add ./alcheme-dsh-experience-map-0.1.
 ```yaml
 - insert:
     - id: experience-map-cli-startup
-      name: '@alcheme/dsh-experience-map/cli/startup'
+      name: 'dsh-experience-map/cli/startup'
     - id: experience-map-cli-runner
-      name: '@alcheme/dsh-experience-map/cli/runner'
+      name: 'dsh-experience-map/cli/runner'
 ```
 
 然后读取权威状态：

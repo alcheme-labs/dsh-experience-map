@@ -2,7 +2,7 @@
 
 ## Supported code
 
-Security fixes are made on the latest pre-release branch. The package has not yet been published to npm, so there is no supported stable release line.
+Security fixes are made on the latest pre-release branch. The npm package is still a beta, so there is no supported stable release line.
 
 ## Report a vulnerability
 

@@ -222,7 +222,7 @@ export class DiagnosticProposalLlm {
         type: 'text',
         text: experienceRequestText(framed, requestedKind),
       }],
-      source: { kind: 'plugin', plugin: '@alcheme/dsh-experience-map', form: 'recall' },
+      source: { kind: 'plugin', plugin: 'dsh-experience-map', form: 'recall' },
     })
     const generated = await this.generation.generate({
       callConfig: this.callConfig(outputTokenLimit, config),

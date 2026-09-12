@@ -4,8 +4,18 @@ All notable changes will be documented here. The project follows semantic versio
 
 ## Unreleased
 
+## 0.1.0-beta.3 - 2026-09-12
+
+- Removed the install lifecycle script that strict DSH pnpm profiles reject, so registry installation works without `pnpm approve-builds`.
+- Moved the unsupported Node 23 guard to the Host and management CLI runtime entrypoints.
+- Pointed the supported npm and GitHub installation guidance at the verified `0.1.0-beta.3` artifact.
+
+## 0.1.0-beta.2 - 2026-09-12
+
+- Published the community plugin under the unscoped npm name `dsh-experience-map`.
+- npm initially bound `beta` and `latest` to this version, but a fresh DSH install exposed that its `preinstall` guard was rejected by the Profile's strict build-script policy.
 - Use `Alcheme Labs` as the public English maintainer name while retaining `杭州星原驱动科技有限公司` in Chinese and legal attribution.
-- Keep the published `v0.1.0-beta.1` tag and assets immutable. The next GitHub/npm artifact containing the attribution correction will be `0.1.0-beta.2`, built once and published identically to both channels.
+- Kept the published `v0.1.0-beta.1` tag and assets immutable; `beta.2` carries the corrected attribution and npm package identity.
 
 ## 0.1.0-beta.1 - 2026-09-12
 

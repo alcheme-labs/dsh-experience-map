@@ -356,7 +356,7 @@ describe('management CLI async runner', () => {
       details: Readonly<Record<string, unknown>>
       [key: symbol]: unknown
     }
-    error[Symbol.for('@alcheme/dsh-experience-map/ExperienceError')] = true
+    error[Symbol.for('dsh-experience-map/ExperienceError')] = true
     error.code = 'idempotency_conflict'
     error.details = {}
 

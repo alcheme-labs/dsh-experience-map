@@ -21,8 +21,6 @@ const PUBLIC_ROOT_FILES = new Set([
   'SUPPORT.md',
   'THIRD_PARTY_NOTICES.md',
   'build.mjs',
-  'check-node-version.d.mts',
-  'check-node-version.mjs',
   'cordis.patch.yml',
   'package.json',
   'pnpm-lock.yaml',

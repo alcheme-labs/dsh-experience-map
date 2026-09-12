@@ -7,7 +7,7 @@ kind: "package-bundle"
 
 [English](README.md) | 中文
 
-> 当前状态：`0.1.0-beta.1` 公开测试版。安装包通过 GitHub Release 提供预构建 tarball，尚未发布到 npm。
+> 当前状态：`0.1.0-beta.3` 公开测试版，已通过无 scope 的 npm 包 `dsh-experience-map` 和内容一致的 GitHub Release tarball 发布。
 
 ## 概要
 
@@ -86,13 +86,14 @@ Bundle 默认在本地扫描最近已完成的 Session 区间，并按会话列�
 
 ### 安装公开测试版
 
-下载预构建的 Release 安装包，添加到 Web Profile，然后启动该 Profile：
+把公开 npm 包添加到 Web Profile，然后启动该 Profile：
 
 ```sh
-curl -fLO https://github.com/alcheme-labs/dsh-experience-map/releases/download/v0.1.0-beta.1/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
-dsh plugin --profile web add ./alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
 dsh web
 ```
+
+内容一致的预构建 tarball 也可以从不可变的 [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) 下载。
 
 如果从 DSH 源码运行命令，把 `dsh` 换成 `pnpm dsh`。如果希望自行从源码生成同样的包：
 
@@ -136,13 +137,13 @@ pnpm pack
 Host 插件可以在没有 Browser 服务的环境中加载，因此 CLI/headless Profile 可以正常运行：
 
 ```sh
-pnpm dsh plugin --profile headless add /absolute/path/to/alcheme-dsh-experience-map-0.1.0-beta.1.tgz
+pnpm dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
 pnpm dsh --profile headless "你的任务"
 ```
 
 会话建议自动检测和 Experience 自动召回默认开启。保存建议仍然必须由 Owner 明确决定；`defaultMustUseExperience` 默认为 `false`，因此匹配可以生成 Plan，但不会强迫任务使用它。Experience Context 只会在当前 Plan 获批后注入，自动工具执行仍然关闭。
 
-普通 Web 和 headless Profile 不包含管理命令。专用管理 Profile 可以挂载 `@alcheme/dsh-experience-map/cli/startup` 和 `@alcheme/dsh-experience-map/cli/runner`，然后查询同一个 Host 权威状态：
+普通 Web 和 headless Profile 不包含管理命令。专用管理 Profile 可以挂载 `dsh-experience-map/cli/startup` 和 `dsh-experience-map/cli/runner`，然后查询同一个 Host 权威状态：
 
 ```sh
 pnpm dsh --profile experience-management experience status
@@ -258,7 +259,7 @@ Bundle 不修改静态系统提示词。Candidate 提议 Session 和 Plan 专用
 <a id="已知限制与延期能力"></a>
 ## 已知限制与延期能力
 
-- 当前包尚未发布到 npm，通过 GitHub Releases 中的预构建 tarball 安装。
+- npm 使用无 scope 包名 `dsh-experience-map` 发布；受支持的安装命令固定使用经过验证的 `0.1.0-beta.3` 制品。
 - 自动准入默认关闭。六项学习和自动化能力的发布等级都是 `shadow`；评测结果不会自动把它们晋级。
 - SQLite 仍是权威存储，不需要图数据库。召回可以选择固定版本的本地 Transformers.js 向量模型制品；未配置或不可用时继续使用词法回退路径。在当前上游原生依赖安全公告关闭前，Transformers.js 是需要显式安装的可选 peer runtime。
 - 因果记录仍是分等级的候选关系；这个 Bundle 不是通用因果推断引擎。
