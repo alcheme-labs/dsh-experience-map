@@ -84,6 +84,15 @@ By default, the Bundle locally scans bounded intervals from recently completed S
 - A configured Harness LLM provider only when you want the model to propose a Candidate.
 - `@huggingface/transformers` only when you deliberately enable the optional local dense-retrieval adapter. It is not installed automatically; review [SECURITY.md](SECURITY.md) first.
 
+The npm package **does not bundle Transformers.js or model weights and does not download a model automatically**. The two recall modes have different evidence boundaries:
+
+| Mode | Installed state | Best fit | Current evidence boundary |
+| --- | --- | --- | --- |
+| Deterministic hard gates + MiniSearch lexical ranking | Default; no model required | Zero extra model dependency and precision-first abstention | 12/12 with zero harmful matches on the frozen 12-case replay. This is not broad recall evidence; paraphrases and cross-language tasks may still be missed. |
+| The same hard gates + local multilingual E5 hybrid ranking | Explicit opt-in | Calibrated Procedure/Diagnostic paraphrases, bilingual, and semantically similar tasks | 12/12 with zero harmful matches on the same hybrid replay. The 108-case quality suite also used local E5 for semantic equivalence, component mapping, and applicability, but those 108 cases are not all recall queries. |
+
+Vector similarity only discovers and ranks candidates after the hard gates. It cannot by itself authorize saving, exact merging, Context injection, or tool execution. Automatic dense applicability and semantic equivalence are currently calibrated only for Procedure and Diagnostic; another Experience kind cannot cross deterministic gates merely because it has a high vector score. To reproduce the release-tested local semantic path, follow the [pinned setup in the quickstart](docs/QUICKSTART.md#5-optional-enable-the-evaluated-local-semantic-recall) for `@huggingface/transformers@4.2.0` and the exact `Xenova/multilingual-e5-small` revision. Do not reuse these thresholds with an uncalibrated model. A missing, drifted, or unavailable model produces an explicit lexical fallback.
+
 ### Install the public beta
 
 Add the public npm package to a Web profile and start that profile:

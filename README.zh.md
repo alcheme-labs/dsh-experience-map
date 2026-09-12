@@ -84,6 +84,15 @@ Bundle 默认在本地扫描最近已完成的 Session 区间，并按会话列�
 - 只有在让模型生成 Candidate 时才需要配置 Harness LLM Provider。
 - 只有明确启用本地稠密检索适配器时，才需要 `@huggingface/transformers`。它不会被自动安装，启用前请先阅读 [SECURITY.md](SECURITY.md)。
 
+npm 安装包**不包含 Transformers.js 或模型权重，也不会自动下载模型**。两种召回模式的边界如下：
+
+| 模式 | 安装后状态 | 适合什么情况 | 已有证据边界 |
+| --- | --- | --- | --- |
+| 确定性硬门 + MiniSearch 词法排序 | 默认启用，不需要模型 | 零额外模型依赖、宁可漏召回也不误召回 | 冻结的 12 条受控召回回放为 12/12、0 harmful match；这不是广泛中文召回率证明，换说法或跨语言时可能漏召回。 |
+| 上述硬门 + 本地 multilingual E5 混合排序 | 用户显式配置 | 已校准的 Procedure/Diagnostic 中文改写、跨语言和语义相近任务 | 同一 12 条混合回放为 12/12、0 harmful match；108 条完整质量集也使用了该本地模型参与语义等价、组件映射和适用性判断，但 108 条并非全部都是召回查询。 |
+
+向量相似度只参与硬门之后的候选发现和排序，不能单独授权保存、精确合并、Context 注入或工具执行。当前自动稠密适用性与语义等价只校准了 Procedure 和 Diagnostic；其他 Experience 类型仍不会因为一个高向量分就越过确定性门。若要复现发布前的本地语义路径，请按[五分钟上手中的固定版本配置](docs/QUICKSTART.zh.md#5-可选启用经过评测的本地语义召回)安装 `@huggingface/transformers@4.2.0` 和精确 revision 的 `Xenova/multilingual-e5-small`；不要把同一阈值直接套用到未经校准的其他模型。模型缺失、漂移或不可用时，插件会明确降级到词法召回。
+
 ### 安装公开测试版
 
 把公开 npm 包添加到 Web Profile，然后启动该 Profile：

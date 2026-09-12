@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "d41e23f6ce936a158cac64f382ab1eab7884330c",
+  "sourceCommit": "7b5d1a9380ecca214a67d8e62c6ad7e4337ec197",
   "sourceTreeDirty": false,
   "fileCount": 232,
   "files": [
@@ -66,13 +66,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 20889,
-      "sha256": "0dd924bbbc507d2f0e379dee8e73dc3ebb13784e2a7b3a054c9e2ad8dbf84043"
+      "bytes": 22633,
+      "sha256": "0249e5a6af779f65ae416bb004a386abf9a9d5e48100e01f94db8fbd34532395"
     },
     {
       "path": "README.zh.md",
-      "bytes": 19294,
-      "sha256": "13414aac14bc4c5da3ee039c403519f11a41fd5a2014fbd3ff5464f9ace748d8"
+      "bytes": 20874,
+      "sha256": "f36bc78de2b62a9f96fdba69b3de54911bb533b59d055771d9a51e9e23ea1d5c"
     },
     {
       "path": "SECURITY.md",
@@ -126,13 +126,13 @@
     },
     {
       "path": "docs/QUICKSTART.md",
-      "bytes": 5439,
-      "sha256": "eaa3d30c6527b8d4fccd5143a85a4675030b09035a9c1516ee900d4f134e076c"
+      "bytes": 12220,
+      "sha256": "f8fb70594ebc271610967d94875f377ff79b32197d0b270c1cf13e2d50fba9d0"
     },
     {
       "path": "docs/QUICKSTART.zh.md",
-      "bytes": 5390,
-      "sha256": "f884d4b5c894f425341036ff2c0dcd15517d4ada2ea7e7ca1c70964bcc3c2412"
+      "bytes": 11614,
+      "sha256": "884e2a475e1f0656666f874f7897faca19c09520907f4e80c8bced30e1cd885c"
     },
     {
       "path": "docs/decisions/m6-learning-projection.md",
@@ -181,13 +181,13 @@
     },
     {
       "path": "docs/release/BENEFIT_EVIDENCE.md",
-      "bytes": 4442,
-      "sha256": "4da7e60b26409e00e8234c7184a5c95a54bfdad4e59970607a84adcbda5f516b"
+      "bytes": 6241,
+      "sha256": "d80be18307cbc542f32f9d555f92033e4cbe26ee9e98b551bc1545a04271fb97"
     },
     {
       "path": "docs/release/COMMUNITY_POST.zh.md",
-      "bytes": 2902,
-      "sha256": "bd62adf7cedda29572ed6ea047ce9a363d99a222989c600a412e4d1657ca87c0"
+      "bytes": 5734,
+      "sha256": "79122b0a4546cfc98b74643b936a84cfb529afd7d92bbdc0e9260a5e08b0f48a"
     },
     {
       "path": "docs/release/OPEN_SOURCE_READINESS.md",
@@ -841,8 +841,8 @@
     },
     {
       "path": "tests/docs/public-release.spec.ts",
-      "bytes": 6867,
-      "sha256": "5c0ecd2b9cb88c08a7a566fd1b16dc0ae1b814f80c9d4d4992a1efd0af32f138"
+      "bytes": 8509,
+      "sha256": "c73c22b05136887a6cb48ccf1e6517df451e57dbf6e6544f7c095a31dd5de9ab"
     },
     {
       "path": "tests/domain/behavior.spec.ts",

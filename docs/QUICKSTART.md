@@ -47,7 +47,82 @@ No settings change is required first. `automaticSuggestionDetection` is enabled 
 
 To change them, open `Settings → Plugins → Plugin configuration → Experience Map`. The optional local vector model and external Candidate proposal route are not prerequisites for automatic collection or default recall.
 
-## 5. Terminal and headless use
+Installing Experience Map does not bundle or automatically download a local model. To enable local dense retrieval, separately install the optional `@huggingface/transformers` runtime, prepare a model directory pinned to an exact revision, and configure its absolute local path and artifact verification metadata. Remote model downloads are disabled at runtime; lexical recall remains available when the configuration is incomplete or the model is unavailable.
+
+## 5. Optional: enable the evaluated local semantic recall
+
+The default mode needs no model. Type-specific deterministic gates first reject Experiences whose scope, evidence, prerequisites, or risk do not apply; MiniSearch only ranks the remaining candidates lexically. This mode deliberately prefers abstention, so its bounded test result is not broad recall evidence. Paraphrases and cross-language tasks are more likely to be missed.
+
+To reproduce the bilingual and paraphrase-oriented semantic path tested for this release, use the **exact runtime, model revision, and calibrated defaults** below.
+
+### 5.1 Install the optional runtime in every participating Profile
+
+The Web profile can install the plugin and its optional peer runtime together:
+
+```sh
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3 @huggingface/transformers@4.2.0
+```
+
+Add `@huggingface/transformers@4.2.0` to the `headless` and `experience-management` Profiles too if they will run semantic recall. DSH may warn that Transformers.js is not a DSH Bundle; that is expected, and it remains an ordinary dependency of that Profile. Review the [security policy](../SECURITY.md) before opting in.
+
+### 5.2 Download the pinned model to a durable directory
+
+Install the `hf` CLI using the [official Hugging Face instructions](https://huggingface.co/docs/huggingface_hub/main/en/guides/cli), then download only the four runtime files:
+
+```sh
+EXPERIENCE_MODEL_DIR="${HOME}/.local/share/dsh-experience-map/models/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78"
+mkdir -p "${EXPERIENCE_MODEL_DIR}"
+hf download Xenova/multilingual-e5-small \
+  config.json tokenizer.json tokenizer_config.json onnx/model_quantized.onnx \
+  --revision 761b726dd34fb83930e26aab4e9ac3899aa1fa78 \
+  --local-dir "${EXPERIENCE_MODEL_DIR}"
+shasum -a 256 "${EXPERIENCE_MODEL_DIR}/onnx/model_quantized.onnx"
+```
+
+The last command must print:
+
+```text
+f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193
+```
+
+Do not use `/tmp` or `/private/tmp`; operating-system cleanup would invalidate the configured path. The files can be checked against the [pinned Hugging Face revision](https://huggingface.co/Xenova/multilingual-e5-small/tree/761b726dd34fb83930e26aab4e9ac3899aa1fa78).
+
+### 5.3 Enable it in plugin settings and read back the state
+
+Open `Settings → Plugins → Plugin configuration → Experience Map → Local semantic matching`:
+
+1. Set `Local embedding provider` to `transformers_js`.
+2. Set `Verified model directory` to the expanded **absolute path** of `EXPERIENCE_MODEL_DIR` above.
+3. Keep every other calibrated default unchanged instead of tuning thresholds by intuition.
+
+The key defaults must read:
+
+| Field | Evaluated value |
+| --- | --- |
+| Model / revision | `Xenova/multilingual-e5-small` / `761b726dd34fb83930e26aab4e9ac3899aa1fa78` |
+| Artifact / SHA-256 / bytes | `onnx/model_quantized.onnx` / `f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193` / `118308185` |
+| Tokenizer/config bundle SHA-256 | `4fbcddc3ad44860d65318f8f0c7b8f9d49632554f41b735749fe9075f04bb133` |
+| Dimension / dtype / pooling | `384` / `q8` / `mean` |
+| Query / passage prefixes | `query: ` / `passage: ` |
+| Max tokens / similarity threshold / top-two margin | `512` / `0.76` / `0.025` |
+| Equivalence threshold / margin | `0.88` / `0.03` |
+
+Settings apply live; no Host restart is required. `Configured, awaiting corpus` is expected before any saved Experience exists. After saving at least one Experience and allowing the index to build, the status must become `Semantic index ready`. If it says `Model unavailable (lexical fallback)`, do not treat subsequent results as local-E5 results: first check the Profile dependency, absolute path, revision, and digests.
+
+Automatic dense applicability and semantic equivalence are currently enabled only for `procedure` and `diagnostic`. This is the evaluated calibration boundary, not a missing setting. Preference, Fact, Strategy, and Causal records cannot cross deterministic gates merely because E5 assigns a high score.
+
+The pinned model directory is about 129 MB. In one macOS arm64 benchmark, its quantized artifact was 118,308,185 bytes, first load was about 739 ms, warm-query p95 was about 9.7 ms, and process RSS increased by about 576 MiB. These figures are capacity guidance, not a performance promise for every machine.
+
+### 5.4 Which measurements used Transformers.js
+
+- The default MiniSearch lexical baseline scored 12/12 with zero harmful matches on the frozen 12-case controlled recall replay. Those fixtures supply explicit task-family, scope, and error/tool signals; this is not arbitrary-language recall accuracy.
+- The local-E5 hybrid replay used MiniSearch `7.2.0` plus the pinned model above and scored 12/12 with zero harmful matches on the same replay.
+- The 108-case quality suite is not 108 pure recall queries. Deterministic logic owns extractability, kind, and evidence grounding; local E5 participates in semantic equivalence, component mapping, and applicability. The small frozen suite recorded zero false merges, zero harmful recall/context injection, and zero incorrect component evidence. It is not population-level accuracy.
+- The README's 65.9% provider-token-volume reduction compares the same matched Experience with no approved Context against approved Context delivery. Local E5 was `dense_ready` during that pilot, but matching was held constant between the paired runs. The result measures reuse benefit, not E5-versus-lexical accuracy.
+
+Recommendation: keep the lexical default for zero extra dependency and the most conservative behavior. Enable the pinned E5 setup for predominantly Chinese, paraphrased, or cross-language Procedure/Diagnostic tasks. The settings card can describe another local Transformers model identity, but automatic recall will conservatively reject or fall back because that identity is not calibrated; it does not reproduce this release's result. The current recall adapter has no external embedding provider. The external DSH-model route in settings is for Candidate enrichment, which is a separate capability path.
+
+## 6. Terminal and headless use
 
 Suggestion detection and recall remain enabled when the Bundle is installed into the headless profile:
 
@@ -101,12 +176,13 @@ dsh --profile experience-management experience suggestion-save --input /absolute
 
 If the suggestion changed or expired, the digest fence rejects the command; read the current suggestion before deciding again. The CLI is an auditable management surface, not an unattended auto-save switch.
 
-## 6. Verify the result
+## 7. Verify the result
 
 - `suggestions-show` includes the new Session and its groups.
 - Save returns `saved_new_experience`, `attached_as_evidence`, or `already_recorded`; the latter two do not create a duplicate Experience.
 - `plan-list` shows Match, Preflight, Plan, and approval state for the similar task.
 - The actual task receives minimal Experience Context only after approval.
 - Effective settings still report automatic tool execution as disabled.
+- When local semantic mode is enabled, `Local semantic index` becomes `Semantic index ready` after at least one Experience is saved; otherwise the current run is still using the lexical path.
 
 See the [main README](../README.md) for the full lifecycle, privacy model, and product boundaries.

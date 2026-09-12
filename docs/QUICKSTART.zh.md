@@ -49,7 +49,82 @@ dsh web
 
 需要修改时，打开“设置 → 插件 → 插件配置 → Experience Map”。本地向量模型和外部 Candidate 提炼都是可选项，不是自动收集与默认召回的前置条件。
 
-## 5. 终端与 headless 使用
+注意：安装 Experience Map 不会附带或自动下载本地模型。要启用本地稠密检索，需要另行安装可选的 `@huggingface/transformers` 运行时、自行准备固定 revision 的模型目录，并配置本地绝对路径及制品校验信息。插件运行时禁止远程下载；未完成配置或模型不可用时会保留词法召回路径。
+
+## 5. 可选：启用经过评测的本地语义召回
+
+默认模式不需要模型：类型专属作用域、证据、前置条件、风险等确定性硬门先排除不适用经验，MiniSearch 只在剩余候选中做词法排序。这个模式偏向“不确定就不匹配”，因此不能把受控测试结果理解成广泛的中文召回率；明显改写或中英跨语言任务更可能漏召回。
+
+如果希望复现本项目发布前测试的中文改写和跨语言语义路径，请使用下面的**精确运行时、模型 revision 和默认阈值**。
+
+### 5.1 给使用该功能的 Profile 安装可选运行时
+
+Web Profile 可以一次安装插件和可选 peer runtime：
+
+```sh
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3 @huggingface/transformers@4.2.0
+```
+
+如果还要在 `headless` 或 `experience-management` Profile 中运行语义召回，也要把 `@huggingface/transformers@4.2.0` 加到对应 Profile。DSH 可能提示 Transformers.js 不是 DSH Bundle；这是预期提示，它仍作为该 Profile 的普通依赖保留。启用前请阅读[安全说明](../SECURITY.md)。
+
+### 5.2 下载固定模型到持久目录
+
+先按 Hugging Face 的 [`hf` CLI 安装说明](https://huggingface.co/docs/huggingface_hub/main/en/guides/cli)安装 `hf`，然后只下载运行所需的四个文件：
+
+```sh
+EXPERIENCE_MODEL_DIR="${HOME}/.local/share/dsh-experience-map/models/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78"
+mkdir -p "${EXPERIENCE_MODEL_DIR}"
+hf download Xenova/multilingual-e5-small \
+  config.json tokenizer.json tokenizer_config.json onnx/model_quantized.onnx \
+  --revision 761b726dd34fb83930e26aab4e9ac3899aa1fa78 \
+  --local-dir "${EXPERIENCE_MODEL_DIR}"
+shasum -a 256 "${EXPERIENCE_MODEL_DIR}/onnx/model_quantized.onnx"
+```
+
+最后一条命令必须输出：
+
+```text
+f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193
+```
+
+不要把模型放在 `/tmp` 或 `/private/tmp`：系统清理后路径会失效。固定模型版本可在 [Hugging Face revision 页面](https://huggingface.co/Xenova/multilingual-e5-small/tree/761b726dd34fb83930e26aab4e9ac3899aa1fa78)核对。
+
+### 5.3 在插件设置中启用并读回状态
+
+打开“设置 → 插件 → 插件配置 → Experience Map → 本地语义匹配”：
+
+1. 把“本地语义模型 Provider”改为 `transformers_js`。
+2. 把“已校验模型目录”设为上面 `EXPERIENCE_MODEL_DIR` 展开后的**绝对路径**。
+3. 其余字段保留安装时的校准默认值，不要只凭感觉调整阈值。
+
+关键默认值应为：
+
+| 字段 | 经过评测的值 |
+| --- | --- |
+| 模型 / revision | `Xenova/multilingual-e5-small` / `761b726dd34fb83930e26aab4e9ac3899aa1fa78` |
+| 制品 / SHA-256 / 字节数 | `onnx/model_quantized.onnx` / `f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193` / `118308185` |
+| Tokenizer/配置包 SHA-256 | `4fbcddc3ad44860d65318f8f0c7b8f9d49632554f41b735749fe9075f04bb133` |
+| 维度 / dtype / pooling | `384` / `q8` / `mean` |
+| query / passage 前缀 | `query: ` / `passage: ` |
+| 最大 Token / 相似度门槛 / 第一二名间隔 | `512` / `0.76` / `0.025` |
+| 等价候选门槛 / 间隔 | `0.88` / `0.03` |
+
+设置实时生效，不需要重启 Host。尚无已保存 Experience 时，“已配置，等待语料”是正常状态；至少保存一条 Experience 并等待索引完成后，状态必须变为“语义索引可用”。如果显示“模型不可用（已降级词法）”，不要把后续结果当作本地 E5 测试结果，应先核对 Profile 依赖、绝对路径、revision 和摘要。
+
+当前自动稠密适用性和语义等价只对 `procedure`、`diagnostic` 两类开放；这是评测校准边界，不是遗漏设置。Preference、Fact、Strategy、Causal 等类型不会只凭 E5 高分越过确定性硬门。
+
+本次固定模型目录约 129 MB；一次 macOS arm64 基准中，量化制品为 118,308,185 字节，首次加载约 739 ms、热查询 p95 约 9.7 ms、进程 RSS 增量约 576 MiB。这些资源数值只用于容量预估，不是所有机器的性能承诺。
+
+### 5.4 测试结果到底用了什么
+
+- 默认 MiniSearch 词法基线在冻结的 12 条受控召回回放中为 12/12、0 harmful match；样本依赖明确的任务族、作用域和错误/工具信号，不能外推成任意中文任务的准确率。
+- 本地 E5 混合回放使用 MiniSearch `7.2.0` 加上述固定模型，同一 12 条为 12/12、0 harmful match。
+- 108 条完整质量评测不是 108 条纯召回测试：可提炼性、类型和证据落位主要由确定性逻辑负责；本地 E5 参与语义等价、组件映射和适用性测试。该小型冻结集结果为 0 false merge、0 harmful recall/context injection、0 incorrect component evidence；它不是生产总体准确率。
+- README 中 65.9% provider token volume 降幅来自同一条已匹配 Experience 在“未批准、未注入”和“已批准、已注入”之间的短任务配对。该试验运行时本地 E5 为 `dense_ready`，但匹配条件在两组中保持一致；它证明 Context 复用收益，不证明 E5 比词法更准。
+
+因此建议是：只要求零依赖和最保守行为时保留默认词法；主要使用中文、存在大量 Procedure/Diagnostic 换说法或跨语言任务时，启用上述固定 E5 配置。设置卡可以填写其他本地 Transformers 模型身份，但当前自动召回会因“未校准”而保守拒绝或降级，不能声称复现了本项目测试效果。当前召回适配器不支持外部向量 Provider；设置中的外部 DSH 模型路线用于 Candidate 提炼，是另一条能力链路。
+
+## 6. 终端与 headless 使用
 
 安装到 headless Profile 后，Session 建议检测和 Experience 召回同样默认开启：
 
@@ -103,12 +178,13 @@ dsh --profile experience-management experience suggestion-save --input /absolute
 
 如果建议在提交前已经变化或过期，版本摘要校验会拒绝保存；重新读取建议后再决定。CLI 是可审计的管理接口，不会把“开启自动保存”变成无人确认的持久写入。
 
-## 6. 怎么确认真的生效
+## 7. 怎么确认真的生效
 
 - `suggestions-show` 能看到新 Session 和对应建议分组。
 - 保存返回 `saved_new_experience`、`attached_as_evidence` 或 `already_recorded` 之一；后两者都不会新建重复 Experience。
 - `plan-list` 能看到相似任务的 Match、Preflight、Plan 和批准状态。
 - 获批后的实际任务请求包含最小 Experience Context；未批准任务不包含。
 - “设置 → 插件”中的有效值仍显示自动执行关闭。
+- 启用本地语义模式时，至少保存一条 Experience 后，“本地语义索引”显示“语义索引可用”；否则当前运行仍是词法路径。
 
 更完整的产品边界、隐私说明和内部生命周期见[中文 README](../README.zh.md)。

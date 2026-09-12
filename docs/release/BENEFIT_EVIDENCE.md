@@ -25,6 +25,16 @@ The two primary comparison runs used the same Harness checkout, DeepSeek route, 
 
 The intervention was Experience Context delivery after Plan approval. Automatic tool execution stayed disabled. Separate API keys were not needed because every model step and token event was attributed to its Session.
 
+## Matcher boundary / 匹配器边界
+
+The pilot ran with the pinned local `Xenova/multilingual-e5-small` index in `dense_ready` state. That fact does **not** turn the 65.9% observation into a recall-accuracy result: B2 and B3 used the same saved Experience and the same match; the changed condition was Plan approval and Context delivery. The comparison demonstrates downstream reuse benefit after a correct match, not that E5 is more accurate than lexical retrieval.
+
+本次试验运行时，固定版本的本地 `Xenova/multilingual-e5-small` 索引处于 `dense_ready`。但 65.9% **不是召回准确率**：B2 与 B3 使用同一条已保存 Experience 和同一匹配，变化条件只是 Plan 是否获批以及 Context 是否注入。它证明的是正确匹配后的下游复用收益，不证明 E5 比词法召回更准确。
+
+Matcher quality is evaluated separately. The frozen 12-case hybrid replay is recorded in [`evidence/auto/e4a/replay-node22.json`](../../evidence/auto/e4a/replay-node22.json). The later 108-case quality suite is recorded in [`evidence/corr/e5/offline-evaluation.json`](../../evidence/corr/e5/offline-evaluation.json); it includes deterministic extraction and grounding tests as well as local-E5 semantic equivalence, component-mapping, and applicability tests, so it must not be described as 108 recall queries.
+
+匹配质量由独立证据评测：冻结的 12 条混合召回回放见 [`evidence/auto/e4a/replay-node22.json`](../../evidence/auto/e4a/replay-node22.json)；后续 108 条质量集见 [`evidence/corr/e5/offline-evaluation.json`](../../evidence/corr/e5/offline-evaluation.json)。后者同时包含确定性提炼/证据落位和本地 E5 参与的语义等价、组件映射、适用性测试，因此不能写成“108 条召回测试”。
+
 ## Measurement
 
 `provider token volume` is:

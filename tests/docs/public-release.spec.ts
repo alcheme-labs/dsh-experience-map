@@ -97,6 +97,32 @@ describe('public release boundary', () => {
     }
   })
 
+  it('documents reproducible semantic setup without conflating recall and benefit evidence', async () => {
+    const [readme, chinese, quickstart, quickstartChinese, benefit] = await Promise.all([
+      readFile(resolve(root, 'README.md'), 'utf8'),
+      readFile(resolve(root, 'README.zh.md'), 'utf8'),
+      readFile(resolve(root, 'docs/QUICKSTART.md'), 'utf8'),
+      readFile(resolve(root, 'docs/QUICKSTART.zh.md'), 'utf8'),
+      readFile(resolve(root, 'docs/release/BENEFIT_EVIDENCE.md'), 'utf8'),
+    ])
+    for (const document of [readme, chinese, quickstart, quickstartChinese]) {
+      expect(document).toContain('@huggingface/transformers@4.2.0')
+      expect(document).toContain('Xenova/multilingual-e5-small')
+    }
+    for (const document of [quickstart, quickstartChinese]) {
+      expect(document).toContain('761b726dd34fb83930e26aab4e9ac3899aa1fa78')
+      expect(document).toContain('f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193')
+    }
+    expect(quickstart).toContain('is not 108 pure recall queries')
+    expect(quickstartChinese).toContain('不是 108 条纯召回测试')
+    expect(quickstart).toContain('only for `procedure` and `diagnostic`')
+    expect(quickstartChinese).toContain('只对 `procedure`、`diagnostic` 两类开放')
+    expect(quickstart).toContain('current recall adapter has no external embedding provider')
+    expect(quickstartChinese).toContain('当前召回适配器不支持外部向量 Provider')
+    expect(benefit).toContain('does **not** turn the 65.9% observation into a recall-accuracy result')
+    expect(benefit).toContain('65.9% **不是召回准确率**')
+  })
+
   it('exports a new clean tree without private history or internal evidence', async () => {
     const temporaryRoot = await mkdtemp(join(tmpdir(), 'experience-public-test-'))
     temporaryDirectories.push(temporaryRoot)
