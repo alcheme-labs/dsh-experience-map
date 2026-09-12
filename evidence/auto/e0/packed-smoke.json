@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "experience-auto-e0-packed-smoke-v1",
+  "status": "passed",
+  "node": "v22.23.1",
+  "package": "@alcheme/dsh-experience-map@0.0.0-development",
+  "tarballSha256": "sha256:f5bfc30eb7754469ccf70e97cb8a79624f2f524a3b77da101b63c31498817985",
+  "tarballBytes": 866620,
+  "entryCount": 127,
+  "loadedExports": {
+    "host": [
+      "Config",
+      "Experiences",
+      "RESTART_CONFIG_KEYS",
+      "default"
+    ],
+    "cliStartup": [
+      "apply",
+      "inject",
+      "name"
+    ],
+    "cliRunner": [
+      "apply",
+      "inject",
+      "name"
+    ]
+  },
+  "runtimeDependencies": {
+    "minisearch": "7.2.0"
+  },
+  "optionalRuntimeDependencies": {
+    "@huggingface/transformers": "4.2.0"
+  },
+  "forbiddenEntries": [],
+  "modelArtifactsBundled": false
+}

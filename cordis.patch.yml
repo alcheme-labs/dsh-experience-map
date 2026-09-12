@@ -1,0 +1,47 @@
+# One production Host owner; the Browser face is discovered from this root row.
+- insert:
+    - id: experience-map
+      name: '@alcheme/dsh-experience-map'
+      config:
+        databasePath: !!js dshHomePath('experience', 'experience.sqlite')
+        journalMode: wal
+        synchronous: normal
+        busyTimeoutMs: 5000
+        maxPendingWrites: 128
+        maxRecords: 96
+        maxRecordBytes: 8192
+        maxTotalBytes: 262144
+        maxEvidenceItems: 64
+        maxEvidenceItemBytes: 4096
+        maxEvidencePacketBytes: 65536
+        maxInlineFieldBytes: 16384
+        maxMarkdownProjectionBytes: 262144
+        provider: deepseek-official
+        model: deepseek-v4-flash
+        reasoningEffort: low
+        maxTokens: 8192
+        maxModelInputBytes: 98304
+        retrievalCandidateLimit: 32
+        observationFreshnessMs: 300000
+        planApprovalTtlMs: 1800000
+        planningHistoryLimit: 20
+        taskFingerprintProposalMode: deterministic
+        taskFingerprintMaxTokens: 1024
+        maxPlanningTaskBytes: 32768
+        admissionClaimLeaseMs: 30000
+        automaticSuggestionDetection: true
+        recentSuggestionSessionLimit: 8
+        suggestionTtlMs: 1209600000
+        enrichmentMode: disabled
+        generationRoute: configured_dsh_provider
+        automaticRecall: true
+        automaticContextInjection: after_current_plan_approval
+        automaticToolExecution: disabled
+        defaultTargetExposure: local
+        defaultRiskClass: standard
+        defaultMustUseExperience: false
+        verificationTimeoutMs: 15000
+        learningPollIntervalMs: 1000
+        learningClaimLeaseMs: 30000
+        learningRetryDelayMs: 5000
+        learningBatchSize: 32

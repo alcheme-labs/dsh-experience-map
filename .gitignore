@@ -1,0 +1,40 @@
+node_modules/
+.pnpm-store/
+lib/
+dist/
+coverage/
+*.log
+*.tgz
+.DS_Store
+.playwright-cli/
+evidence/m1-00/harness-home/
+evidence/m1-00/playwright/
+evidence/m1/harness-home/
+evidence/m1/playwright/
+evidence/m2/harness-home/
+evidence/m2/playwright/
+evidence/m3/harness-home/
+evidence/m3/playwright/
+evidence/m4/harness-home/
+evidence/m4/playwright/
+evidence/m5/harness-home/
+evidence/m5/playwright/
+evidence/m6/harness-home/
+evidence/m6/playwright/
+evidence/auto/e5/harness-home/
+output/
+
+# Exact receipt-bound milestone artifacts remain reproducible evidence.
+!evidence/m2/alcheme-dsh-experience-map-0.0.0-development.m2.tgz
+!evidence/m3/alcheme-dsh-experience-map-0.0.0-development-m3-passed.tgz
+!evidence/m4/alcheme-dsh-experience-map-0.0.0-development.tgz
+!evidence/m5/alcheme-dsh-experience-map-0.0.0-development.tgz
+!evidence/m6/alcheme-dsh-experience-map-0.0.0-development.tgz
+
+# M0 runtime homes are execution workspaces, not versioned evidence.
+evidence/m0/harness-home/
+evidence/m0/runs/*/harness-home/
+
+# Superseded root-level receipts remain local for diagnosis.
+evidence/m0/runtime-evidence.json
+evidence/m0/rejected-runtime-evidence.json

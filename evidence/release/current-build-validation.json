@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "experience-release-current-build-v1",
+  "capturedAt": "2026-09-12T13:02:23+08:00",
+  "sourceCommit": "b8d0bf5d8514461901031a252c7b96d013e8eda1",
+  "status": "installed_component_passed_product_benefit_separate",
+  "sourceEvidenceSha256": {
+    "installedRuntime": "be6bb2bfb659f018a539f759402c970664a957dd7a351ac0b06e154a6186ebc6",
+    "offlineEvaluation": "044b9d2e02db602b4e01987b049ac601f0357fa9968199f9e34f5ca467c6d5c0"
+  },
+  "packedGate": {
+    "testFiles": 75,
+    "tests": 563,
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "frozenEvaluation": {
+    "cases": 108,
+    "holdoutCases": 24,
+    "deidentifiedSessionCases": 54,
+    "metamorphicAssertions": 34,
+    "falseMerge": 0,
+    "harmfulRecallOrContextInjection": 0,
+    "incorrectComponentEvidence": 0,
+    "status": "passed"
+  },
+  "installedReadback": {
+    "profiles": ["web", "headless", "experience-management"],
+    "firstSessionSave": "saved_new_experience",
+    "bilingualSemanticDuplicate": "attached_as_evidence",
+    "canonicalVersionCountAfterBothSaves": 1,
+    "duplicateSeriesCreated": 0,
+    "recallPreflight": "applicable",
+    "planDisposition": "ready_for_approval",
+    "experienceContextDeliveredAfterApproval": true,
+    "automaticToolExecution": "disabled",
+    "browserManualAcceptance": "passed"
+  },
+  "privacy": {
+    "credentialsIncluded": false,
+    "modelBodiesIncluded": false,
+    "sessionBodiesIncluded": false,
+    "sourceBodiesIncluded": false
+  },
+  "remainingBoundary": "The one-family benefit pilot is evidence of an observed signal, not a population-level saving claim"
+}

@@ -1,0 +1,239 @@
+{
+  "schemaVersion": "experience-auto-e0-decision-v1",
+  "milestone": "AUTO-E0",
+  "status": "passed",
+  "baseCommit": "5543cb6",
+  "scope": "Dependency and quality compatibility gate only; no session projection, automatic publication, recall injection, or tool execution is enabled by E0.",
+  "replay": {
+    "path": "benchmarks/auto-e0/replay.json",
+    "sha256": "sha256:2ee140cf177a796f841a867a366825a2b19515ac864d84a71125913c3464dddd",
+    "truthOwners": {
+      "extraction": "source-bound deterministic detectors",
+      "kind": "type-specific required evidence roles and publication validation",
+      "exactIdentity": "type-specific deterministic kernel identity inside the canonical transaction",
+      "recall": "hard eligibility and exact signals, followed by lexical/dense ranking and abstain"
+    },
+    "requiredNegatives": [
+      "local versus public exposure",
+      "same symptom with different cause",
+      "401 versus 404",
+      "EADDRINUSE versus ECONNREFUSED",
+      "stale environment",
+      "permission or task-family conflict",
+      "unresolved, brainstorm-only, model-claim-only and one-off sessions"
+    ]
+  },
+  "dependencyDecision": {
+    "lexical": {
+      "package": "minisearch",
+      "version": "7.2.0",
+      "license": "MIT",
+      "packaging": "required runtime dependency",
+      "decision": "selected as the always-available rebuildable lexical projection"
+    },
+    "denseRuntime": {
+      "package": "@huggingface/transformers",
+      "version": "4.2.0",
+      "license": "Apache-2.0",
+      "packaging": "optional runtime dependency; model artifacts are never inside the npm tarball",
+      "decision": "selected for an opt-in local worker with a typed lexical fallback"
+    },
+    "denseModel": {
+      "id": "Xenova/multilingual-e5-small",
+      "baseModelLicense": "MIT",
+      "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "artifact": "onnx/model_quantized.onnx",
+      "artifactSha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193",
+      "artifactBytes": 118308185,
+      "dimension": 384,
+      "dtype": "q8",
+      "pooling": "mean",
+      "runtimeProfile": "single-consumer-sequential-no-cpu-arena",
+      "decision": "recommended local dense model for bilingual recall only; not authorized for extraction, kind classification, exact merging, publication, injection, or execution"
+    },
+    "rejectedOrGated": {
+      "Xenova/bge-small-zh-v1.5": "failed the frozen bilingual dense-recall top-1 gate",
+      "fts5": "available in the tested macOS arm64 Node 22.23.1 and 24.21.0 builds, but not selected because cross-platform packed compatibility and a measured scale need are not established",
+      "sqliteVecAnn": "not admitted because exact scan has not violated the latency or memory gate",
+      "reranker": "not admitted because no measured hard-negative benefit exists",
+      "graphDatabase": "not admitted because no real multi-hop or temporal bottleneck exists",
+      "memoryFramework": "not admitted because it would duplicate the existing Candidate, Version, Evidence, approval, and lifecycle owners"
+    },
+    "nativeBuildPolicy": {
+      "onnxruntime-node": "1.24.3 postinstall is explicitly allowed and was executed",
+      "sharp": "0.34.5 install script remains disabled because text embedding does not consume it",
+      "protobufjs": "7.6.6 postinstall remains disabled because the selected path does not require it",
+      "lockfileIntegrity": "pnpm lockfile integrity fields and the repository supply-chain policy are authoritative for npm artifacts"
+    },
+    "runtimeDependencyInventory": {
+      "path": "evidence/auto/e0/runtime-dependency-inventory.json",
+      "testedPlatformPackageCount": 51,
+      "unknownLicenses": 0,
+      "copyleftBoundary": "One LGPL-3.0-or-later libvips platform binary is a transitive package of unused sharp inside the optional Transformers.js runtime; it is dynamically installed and is not bundled into the plugin tarball."
+    }
+  },
+  "benchmarks": {
+    "node22": {
+      "path": "evidence/auto/e0/benchmark-offline-node22.json",
+      "node": "v22.23.1",
+      "offline": true,
+      "selectedModelPassed": true
+    },
+    "node24": {
+      "path": "evidence/auto/e0/benchmark-offline-node24.json",
+      "node": "v24.21.0",
+      "offline": true,
+      "selectedModelPassed": true
+    },
+    "interpretation": "The embedding result is only a small frozen compatibility and hard-negative gate. It is not a statistical product-benefit claim. MiniSearch and the current B0 score well on this set only after exact task-family, exposure and error-code fields are supplied; both fail the extraction and exact-identity gates."
+  },
+  "packedArtifact": {
+    "evidence": "evidence/auto/e0/packed-smoke.json",
+    "status": "passed",
+    "hostAndCliEntriesLoaded": true,
+    "modelArtifactsBundled": false,
+    "note": "The temporary tarball is reproducible from the committed source and is not retained as a second release artifact at this dependency-only gate."
+  },
+  "embeddingProviderContract": {
+    "schemaVersion": "experience-embedding-provider-v1",
+    "operation": "embedBatch",
+    "input": [
+      "requestId",
+      "texts",
+      "role(query|passage)",
+      "modelIdentity(provider,model,revision,artifactSha256)",
+      "expectedDimension",
+      "timeoutMs",
+      "operationSettingsRevision"
+    ],
+    "output": [
+      "normalized finite Float32 vectors in input order",
+      "exact model identity",
+      "dimension",
+      "provider receipt without source text"
+    ],
+    "typedFailures": [
+      "provider_unavailable",
+      "artifact_missing",
+      "artifact_digest_mismatch",
+      "model_drift",
+      "timeout",
+      "cancelled",
+      "wrong_dimension",
+      "non_finite_vector",
+      "remote_not_opted_in",
+      "remote_endpoint_not_allowed"
+    ],
+    "invariants": [
+      "no silent provider fallback",
+      "no remote call without a durable opt-in and current settings revision",
+      "no credential or input text in receipt or logs",
+      "a provider failure leaves lexical retrieval available",
+      "vectors from different generation identities are never compared",
+      "semantic similarity never grants save, merge, injection, approval, or execution authority"
+    ],
+    "implementations": {
+      "transformers_js": "selected real E3 implementation; loads the verified local revision directory and never needs remote metadata at runtime",
+      "ollama": "contract frozen for POST /api/embed batch input and normalized vectors; adapter remains unimplemented until a user-configured consumer exists",
+      "openai_compatible": "contract only; requires explicit remote opt-in, endpoint allowlist and DSH-owned credential reference before implementation"
+    }
+  },
+  "projectionManifest": {
+    "schemaVersion": "experience-retrieval-projection-manifest-v1",
+    "canonicalSource": "active Experience Version plus canonical TaskFingerprint; projection is rebuildable and never a writer of Experience truth",
+    "documentIdentity": "experienceVersionId + contentDigest",
+    "lexicalFields": [
+      "kind",
+      "taskFamily",
+      "title",
+      "intent",
+      "selected component roles",
+      "error codes",
+      "tools",
+      "artifacts",
+      "explicit directives"
+    ],
+    "denseText": "versioned deterministic projection of the same fields; query and passage prefixes are part of the generation identity",
+    "generationIdentityFields": [
+      "projection schema",
+      "tokenizer schema",
+      "provider",
+      "model id",
+      "model revision",
+      "artifact SHA-256",
+      "dimension",
+      "dtype",
+      "pooling",
+      "query prefix",
+      "passage prefix"
+    ],
+    "storage": "the single disposable Experience projection sidecar selected for E1; lexical and dense generations switch atomically only after complete rebuild",
+    "fallback": "missing, corrupt, stale or unsupported dense generation is ignored and the same hard filters plus lexical path remain active",
+    "forbidden": [
+      "comparing vectors across generations",
+      "using projection generation as suggestion group identity",
+      "treating projection data as canonical publication or Evidence",
+      "placing model artifacts in the npm tarball"
+    ]
+  },
+  "identityDecision": {
+    "occurrenceIdentity": "digest(sessionId,endSeq,detectorId,sourceRangeDigest,kernelRole)",
+    "groupScope": "kind + local owner/workspace scope + canonical task family",
+    "procedureKernel": "ordered normalized successful actions + hard prerequisites + independent verifier identity",
+    "diagnosticKernel": "symptom/error signature + confirmed cause or discriminating check + repair + recovery verifier identity",
+    "exact": "all group-scope and type-specific kernel fields match after deterministic normalization",
+    "possibleDuplicate": "semantic similarity can only create a review candidate",
+    "neverIdentityInputs": [
+      "embedding score",
+      "projection generation",
+      "title wording",
+      "occurrence count"
+    ]
+  },
+  "saveExperienceSuggestionTransaction": {
+    "command": "SaveExperienceSuggestion",
+    "action": "suggestion.save",
+    "preTransaction": "read an immutable sidecar snapshot and capture suggestion revision, reviewDigest, sourceDigest and occurrenceIdentity",
+    "transactionMode": "BEGIN IMMEDIATE through the existing ExperienceDatabase.write owner",
+    "orderedChecks": [
+      "resolve owner actor and verify command idempotency payload digest",
+      "verify immutable snapshot revision, reviewDigest, sourceDigest, retention, sensitive-content policy and save readiness",
+      "reject possible_duplicate and any non-ready state",
+      "recompute type-specific exact identity from canonical active Versions",
+      "if exact exists, insert one occurrence-derived EvidenceStatement and EvidenceAssessment against the current Version",
+      "if exact does not exist, reuse publication validation and create exactly one Series, Version, components, Evidence, assessment and governance decision",
+      "persist one DomainReceipt, audit event, command deduplication row and projection outbox event",
+      "assert store invariants and commit before changing sidecar disposition"
+    ],
+    "idempotency": "same commandId and payload returns the same receipt; same occurrence/source identity uses deterministic Evidence identity so a new command cannot duplicate Evidence",
+    "concurrency": "every connection performs the active-Version exact-identity scan after BEGIN IMMEDIATE; PublishCandidate reuses the same final guard",
+    "possibleDuplicate": "returns a typed review conflict and never auto-merges",
+    "crashBoundary": "canonical commit wins; sidecar saved disposition is repaired from receipt/source identity and never rolls back or repeats canonical facts"
+  },
+  "canonicalSchemaReuse": {
+    "schemaVersion": 8,
+    "newCanonicalTables": [],
+    "mapping": {
+      "commandIdAndPayloadDigest": "command_deduplication + domain_receipts payload_json",
+      "reviewDigestAndSourceDigest": "domain_receipts payload_json + audit_events payload_digest/source_refs_json",
+      "occurrenceAndSourceIdentity": "Evidence source refs + audit source refs + receipt payload",
+      "newSeriesResult": "existing experience_series, experience_versions, components, evidence, assessment and governance tables",
+      "existingSeriesResult": "new evidence_statements and evidence_assessments bound to the current Version",
+      "rebuildTrigger": "existing outbox_entries",
+      "recentSuggestionState": "disposable sidecar only"
+    },
+    "stopCondition": "If E3 cannot preserve one receipt, exact concurrency safety or occurrence idempotency with these containers, stop and revise the active plan instead of silently adding another canonical writer."
+  },
+  "retentionDecision": {
+    "recentSuggestionSessionLimit": 8,
+    "suggestionTtlDays": 14,
+    "basis": "bounded product default requested for unattended suggestions and sufficient for the first recent-session vertical; both are user-configurable and E1 verifies recent-N plus TTL garbage collection",
+    "nonClaim": "No long-term usage-density optimum is claimed before post-release telemetry exists."
+  },
+  "rollback": {
+    "disableDense": "set embedding provider to disabled and rebuild lexical generation; canonical Experiences remain unchanged",
+    "missingOptionalDependency": "report provider_unavailable and use lexical retrieval",
+    "modelChange": "build a new isolated generation and switch only after manifest verification; never compare old and new vectors",
+    "packageUninstall": "model cache and suggestion sidecar are disposable; canonical schema remains v8"
+  }
+}

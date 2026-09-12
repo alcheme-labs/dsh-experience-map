@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "experience-auto-e0-benchmark-result-v1",
+  "generatedAt": "2026-09-10T09:01:15.985Z",
+  "replay": {
+    "schemaVersion": "experience-auto-e0-replay-v1",
+    "sha256": "sha256:2ee140cf177a796f841a867a366825a2b19515ac864d84a71125913c3464dddd",
+    "sessionCases": 9,
+    "identityCases": 8,
+    "recallCases": 12
+  },
+  "environment": {
+    "node": "v22.23.1",
+    "platform": "darwin",
+    "arch": "arm64",
+    "modelCacheDirectory": "/private/tmp/dsh-experience-auto-e0-models",
+    "remoteHost": "https://huggingface.co/",
+    "remoteAccessEnabledForThisRun": false
+  },
+  "precommittedQualityGates": {
+    "extractionPrecision": 1,
+    "extractionRecall": 0.75,
+    "kindAccuracy": 0.75,
+    "identityFalseMerges": 0,
+    "identityRecall": 0.75,
+    "recallHarmfulMatches": 0,
+    "recallTop1Accuracy": 0.75,
+    "warmP95Ms": 750,
+    "rssDeltaMiB": 650
+  },
+  "baselines": {
+    "b0": {
+      "id": "bounded-structural-lexical-v1",
+      "baseCommit": "5543cb6",
+      "status": "ok",
+      "quality": {
+        "extractionPrecision": 0.7143,
+        "extractionRecall": 1,
+        "kindAccuracy": 1,
+        "identityFalseMerges": 1,
+        "identityRecall": 0,
+        "recallHarmfulMatches": 0,
+        "recallTop1Accuracy": 1,
+        "details": {
+          "classificationErrors": [
+            "session-unresolved-failure-zh",
+            "session-brainstorm-only-en"
+          ],
+          "identityErrors": [
+            "identity-dsh-web-bilingual",
+            "identity-missing-dist-paraphrase",
+            "identity-port-paraphrase",
+            "identity-same-symptom-different-cause"
+          ],
+          "recallErrors": [],
+          "harmfulMatches": []
+        }
+      },
+      "elapsedMs": 16.7371,
+      "scope": "recall uses the real current matcher; extraction, kind and identity use the frozen conservative lexical oracle"
+    },
+    "miniSearch": {
+      "id": "minisearch",
+      "status": "ok",
+      "quality": {
+        "extractionPrecision": 0.7143,
+        "extractionRecall": 1,
+        "kindAccuracy": 1,
+        "identityFalseMerges": 1,
+        "identityRecall": 0,
+        "recallHarmfulMatches": 0,
+        "recallTop1Accuracy": 1,
+        "details": {
+          "classificationErrors": [
+            "session-unresolved-failure-zh",
+            "session-brainstorm-only-en"
+          ],
+          "identityErrors": [
+            "identity-dsh-web-bilingual",
+            "identity-missing-dist-paraphrase",
+            "identity-port-paraphrase",
+            "identity-same-symptom-different-cause"
+          ],
+          "recallErrors": [],
+          "harmfulMatches": []
+        }
+      },
+      "elapsedMs": 7.9896
+    }
+  },
+  "models": [
+    {
+      "id": "bge-small-zh-v1.5",
+      "modelId": "Xenova/bge-small-zh-v1.5",
+      "revision": "75c43b069aac4d136ba6bc1122f995fedcfd2781",
+      "baseLicense": "MIT",
+      "dtype": "q8",
+      "dimension": 512,
+      "pooling": "cls",
+      "queryPrefix": "为这个句子生成表示以用于检索相关文章：",
+      "passagePrefix": "",
+      "artifactFile": "onnx/model_quantized.onnx",
+      "artifactSha256": "15b717c382bcb518ba457b93ea6850ede7f4f1cd8937454aa06972366cd19bcc",
+      "artifactVerified": true,
+      "status": "ok",
+      "loader": "verified_local_revision_directory",
+      "runtimeProfile": "single-consumer-sequential-no-cpu-arena",
+      "quality": {
+        "extractionPrecision": 0.625,
+        "extractionRecall": 1,
+        "kindAccuracy": 0.8,
+        "identityFalseMerges": 0,
+        "identityRecall": 0,
+        "recallHarmfulMatches": 0,
+        "recallTop1Accuracy": 0.1667,
+        "details": {
+          "classificationErrors": [
+            "session-diagnostic-port-en",
+            "session-unresolved-failure-zh",
+            "session-brainstorm-only-en",
+            "session-one-off-copy-en"
+          ],
+          "identityErrors": [
+            "identity-dsh-web-bilingual",
+            "identity-missing-dist-paraphrase",
+            "identity-port-paraphrase"
+          ],
+          "recallErrors": [
+            "recall-local-start-zh",
+            "recall-local-start-en",
+            "recall-missing-dist-zh",
+            "recall-auth-401-zh",
+            "recall-port-en",
+            "recall-refused-zh",
+            "recall-public-deploy-zh",
+            "recall-tls-zh",
+            "recall-db-timeout-en",
+            "recall-node-engine-zh"
+          ],
+          "harmfulMatches": []
+        }
+      },
+      "resource": {
+        "firstLoadMs": 154.9075,
+        "warmP50Ms": 6.7541,
+        "warmP95Ms": 8.6773,
+        "rssDeltaMiB": 168.0156,
+        "rssMeasurement": "sequential_process_delta",
+        "cacheBytes": 24451766,
+        "artifactBytes": 24010842
+      },
+      "roleDecision": {
+        "extraction": "not_authorized",
+        "kindClassification": "not_authorized",
+        "exactIdentityMerge": "not_authorized",
+        "possibleDuplicateDiscovery": "advisory_only",
+        "recallRanking": "eligible_after_hard_filters_and_abstain"
+      },
+      "passesDenseRecallGate": false,
+      "experimentalClassificationGate": false,
+      "experimentalExactIdentityGate": false,
+      "qualityScore": 0.1667
+    },
+    {
+      "id": "multilingual-e5-small",
+      "modelId": "Xenova/multilingual-e5-small",
+      "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "baseLicense": "MIT",
+      "dtype": "q8",
+      "dimension": 384,
+      "pooling": "mean",
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "artifactFile": "onnx/model_quantized.onnx",
+      "artifactSha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193",
+      "artifactVerified": true,
+      "status": "ok",
+      "loader": "verified_local_revision_directory",
+      "runtimeProfile": "single-consumer-sequential-no-cpu-arena",
+      "quality": {
+        "extractionPrecision": 0.6,
+        "extractionRecall": 0.6,
+        "kindAccuracy": 0.6,
+        "identityFalseMerges": 2,
+        "identityRecall": 0.6667,
+        "recallHarmfulMatches": 0,
+        "recallTop1Accuracy": 1,
+        "details": {
+          "classificationErrors": [
+            "session-procedure-dsh-web-zh",
+            "session-diagnostic-node-engine-zh",
+            "session-brainstorm-only-en",
+            "session-one-off-copy-en"
+          ],
+          "identityErrors": [
+            "identity-port-paraphrase",
+            "identity-same-symptom-different-cause",
+            "identity-401-vs-404"
+          ],
+          "recallErrors": [],
+          "harmfulMatches": []
+        }
+      },
+      "resource": {
+        "firstLoadMs": 738.5364,
+        "warmP50Ms": 7.2718,
+        "warmP95Ms": 9.7092,
+        "rssDeltaMiB": 576.4219,
+        "rssMeasurement": "sequential_process_delta",
+        "cacheBytes": 135392674,
+        "artifactBytes": 118308185
+      },
+      "roleDecision": {
+        "extraction": "not_authorized",
+        "kindClassification": "not_authorized",
+        "exactIdentityMerge": "not_authorized",
+        "possibleDuplicateDiscovery": "advisory_only",
+        "recallRanking": "eligible_after_hard_filters_and_abstain"
+      },
+      "passesDenseRecallGate": true,
+      "experimentalClassificationGate": false,
+      "experimentalExactIdentityGate": false,
+      "qualityScore": 1
+    }
+  ],
+  "decision": {
+    "embeddingDefault": "multilingual-e5-small",
+    "lexicalDefault": "minisearch",
+    "exactIdentityOwner": "type-specific deterministic kernel identity; embeddings may only surface possible duplicates",
+    "extractionAndKindOwner": "local evidence detectors and deterministic materialization gates",
+    "reason": "Selected only among candidates that passed dense-recall gates; ties prefer recall quality, then smaller artifact."
+  }
+}

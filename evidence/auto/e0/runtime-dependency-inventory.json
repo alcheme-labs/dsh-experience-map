@@ -1,0 +1,621 @@
+{
+  "schemaVersion": "experience-auto-e0-runtime-dependency-inventory-v2",
+  "status": "passed",
+  "statusScope": "license and lockfile coverage; security disposition is reported separately",
+  "platform": "darwin",
+  "arch": "arm64",
+  "node": "v22.23.1",
+  "roots": [
+    {
+      "name": "minisearch",
+      "placement": "required"
+    },
+    {
+      "name": "@huggingface/transformers",
+      "placement": "optional_peer_operator_supplied"
+    }
+  ],
+  "packageCount": 51,
+  "licenseCounts": {
+    "(MIT OR CC0-1.0)": 1,
+    "Apache-2.0": 7,
+    "BSD-3-Clause": 13,
+    "ISC": 3,
+    "LGPL-3.0-or-later": 1,
+    "MIT": 26
+  },
+  "packages": [
+    {
+      "name": "@huggingface/jinja",
+      "version": "0.5.10",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@huggingface/transformers@4.2.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@huggingface/tokenizers",
+      "version": "0.1.3",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@huggingface/transformers@4.2.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@huggingface/transformers",
+      "version": "4.2.0",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@huggingface/transformers"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "sharp@0.34.5"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@img/sharp-darwin-arm64",
+      "version": "0.34.5",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "sharp@0.34.5"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@img/sharp-libvips-darwin-arm64",
+      "version": "1.2.4",
+      "license": "LGPL-3.0-or-later",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@img/sharp-darwin-arm64@0.34.5",
+        "sharp@0.34.5"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/aspromise",
+      "version": "1.1.2",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@protobufjs/fetch@1.1.1",
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/base64",
+      "version": "1.1.2",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/codegen",
+      "version": "2.0.5",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/eventemitter",
+      "version": "1.1.1",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/fetch",
+      "version": "1.1.1",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/float",
+      "version": "1.0.2",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/path",
+      "version": "1.1.2",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/pool",
+      "version": "1.1.0",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@protobufjs/utf8",
+      "version": "1.1.2",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "@types/node",
+      "version": "24.13.3",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "adm-zip",
+      "version": "0.5.18",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-node@1.24.3"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "boolean",
+      "version": "3.2.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "global-agent@3.0.0",
+        "roarr@2.15.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "define-data-property",
+      "version": "1.1.4",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "define-properties@1.2.1"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "define-properties",
+      "version": "1.2.1",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "globalthis@1.0.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "sharp@0.34.5"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "detect-node",
+      "version": "2.1.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "roarr@2.15.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "define-data-property@1.1.4",
+        "has-property-descriptors@1.0.2"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "es-errors",
+      "version": "1.3.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "define-data-property@1.1.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "es6-error",
+      "version": "4.1.1",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "global-agent@3.0.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "escape-string-regexp",
+      "version": "4.0.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "matcher@3.0.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "flatbuffers",
+      "version": "25.9.23",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-web@1.26.0-dev.20260416-b7804b056c"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "global-agent",
+      "version": "3.0.0",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-node@1.24.3"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "globalthis",
+      "version": "1.0.4",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "roarr@2.15.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "gopd",
+      "version": "1.2.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "define-data-property@1.1.4",
+        "globalthis@1.0.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "guid-typescript",
+      "version": "1.0.9",
+      "license": "ISC",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-web@1.26.0-dev.20260416-b7804b056c"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "has-property-descriptors",
+      "version": "1.0.2",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "define-properties@1.2.1"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "json-stringify-safe",
+      "version": "5.0.1",
+      "license": "ISC",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "roarr@2.15.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "long",
+      "version": "5.3.2",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-web@1.26.0-dev.20260416-b7804b056c",
+        "protobufjs@7.6.6"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "matcher",
+      "version": "3.0.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "global-agent@3.0.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "minisearch",
+      "version": "7.2.0",
+      "license": "MIT",
+      "placement": "required",
+      "parents": [
+        "minisearch"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "object-keys",
+      "version": "1.1.1",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "define-properties@1.2.1"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "onnxruntime-common",
+      "version": "1.24.0-dev.20251116-b39e144322",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-web@1.26.0-dev.20260416-b7804b056c"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "onnxruntime-common",
+      "version": "1.24.3",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-node@1.24.3"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "onnxruntime-node",
+      "version": "1.24.3",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@huggingface/transformers@4.2.0"
+      ],
+      "installScripts": [
+        "postinstall:node ./script/install"
+      ],
+      "lockfileCovered": true
+    },
+    {
+      "name": "onnxruntime-web",
+      "version": "1.26.0-dev.20260416-b7804b056c",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@huggingface/transformers@4.2.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "platform",
+      "version": "1.3.6",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-web@1.26.0-dev.20260416-b7804b056c"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "protobufjs",
+      "version": "7.6.6",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "onnxruntime-web@1.26.0-dev.20260416-b7804b056c"
+      ],
+      "installScripts": [
+        "postinstall:node scripts/postinstall"
+      ],
+      "lockfileCovered": true
+    },
+    {
+      "name": "roarr",
+      "version": "2.15.4",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "global-agent@3.0.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "semver",
+      "version": "7.8.5",
+      "license": "ISC",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "global-agent@3.0.0",
+        "sharp@0.34.5"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "semver-compare",
+      "version": "1.0.0",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "roarr@2.15.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "serialize-error",
+      "version": "7.0.1",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "global-agent@3.0.0"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "sharp",
+      "version": "0.34.5",
+      "license": "Apache-2.0",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@huggingface/transformers@4.2.0"
+      ],
+      "installScripts": [
+        "install:node install/check.js || npm run build"
+      ],
+      "lockfileCovered": true
+    },
+    {
+      "name": "sprintf-js",
+      "version": "1.1.3",
+      "license": "BSD-3-Clause",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "roarr@2.15.4"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "type-fest",
+      "version": "0.13.1",
+      "license": "(MIT OR CC0-1.0)",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "serialize-error@7.0.1"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    },
+    {
+      "name": "undici-types",
+      "version": "7.18.2",
+      "license": "MIT",
+      "placement": "optional_peer_operator_supplied",
+      "parents": [
+        "@types/node@24.13.3"
+      ],
+      "installScripts": [],
+      "lockfileCovered": true
+    }
+  ],
+  "buildPolicy": {
+    "allowed": [
+      "onnxruntime-node@1.24.3:postinstall"
+    ],
+    "disabled": [
+      "sharp@0.34.5:install",
+      "protobufjs@7.6.6:postinstall"
+    ]
+  },
+  "securityDisposition": {
+    "defaultProductionInstall": "audited separately and contains MiniSearch only",
+    "transformersJs": "not automatically installed; upstream native dependency advisories remain open"
+  },
+  "notes": [
+    "MiniSearch is the default installed production subtree. The Transformers.js rows inventory an explicitly supplied optional peer runtime from the development environment.",
+    "The LGPL libvips binary is a transitive platform package of sharp. Sharp belongs to the operator-supplied Transformers.js runtime, is not used by text embedding, and is not bundled into this plugin tarball.",
+    "Model weights are separately revision/SHA pinned and are not npm dependencies."
+  ]
+}

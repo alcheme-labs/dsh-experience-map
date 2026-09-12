@@ -1,0 +1,9 @@
+# M7 three-arm evaluation ownership
+
+M7-07 stores source-backed observations from externally executed frozen-corpus runs and compares `no_memory`, `retrieval_only`, and `experience_map`. The shipped Experience Map Host does not execute benchmark tasks or infer missing outcomes; the isolated release-evidence runner remains the producer of task, verifier, timing, token, route, and acceptance evidence. The package-owned runtime verifier validates and ingests that runner output through the public management CLI, then compares it with canonical Usage and Settlement readback.
+
+Observations are comparable only when all three arms contain the same task cases and use the same model, tools, context budget, verifier, corpus, training cutoff, and training Episode set. Test tasks must occur after the training cutoff. The first two arms cannot carry an Experience `TaskFingerprint`, Usage, or Settlement identity. The Experience arm must bind its claimed outcome to the exact canonical TaskFingerprint, Usage, and Settlement.
+
+The report keeps `unknown` separate from both success and failure. It reports success over all samples, resolved-only success, Wilson 95 percent intervals, unknown rate, route stability, repeated exploration, human actions, erroneous side effects, erroneous reuse, pollution, explanation coverage, elapsed time, model rounds, tool calls, and input and output tokens. Missing arms, unequal task sets, configuration drift, train/test leakage, and source mismatch make the cohort non-comparable instead of producing a favorable conclusion.
+
+The repository owns immutable observation records and deterministic aggregation. The Browser and management CLI read the same report. The report is evaluation evidence only; it does not change retrieval, publish Experience content, or promote an automation capability.

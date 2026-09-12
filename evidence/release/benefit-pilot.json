@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "experience-release-benefit-v1",
+  "capturedAt": "2026-09-11T00:00:00+08:00",
+  "status": "observed_signal_not_population_claim",
+  "taskFamily": "read_only_harness_host_acceptance",
+  "taskBoundary": {
+    "maximumObservedRunSeconds": 52.6,
+    "sideEffectsAllowed": false,
+    "resultRequired": "version, shared API route, async Session query, v3 events, and clean tracked worktree"
+  },
+  "controls": {
+    "sameHarnessCheckout": true,
+    "sameProviderRoute": true,
+    "sameHeadlessProfile": true,
+    "sameTaskText": true,
+    "sameToolsAndPermissions": true,
+    "sameSavedExperience": true,
+    "automaticToolExecution": "disabled",
+    "separateApiKeysRequired": false
+  },
+  "runs": [
+    {
+      "id": "A1",
+      "role": "empty_database_reference",
+      "experienceContext": "absent",
+      "providerTokenVolume": 728159,
+      "modelSteps": 16,
+      "toolCalls": 41,
+      "elapsedSeconds": 50.9,
+      "outcome": "passed"
+    },
+    {
+      "id": "B2",
+      "role": "paired_control",
+      "experienceContext": "matched_but_not_approved_or_delivered",
+      "providerTokenVolume": 629972,
+      "modelSteps": 13,
+      "toolCalls": 33,
+      "elapsedSeconds": 52.6,
+      "outcome": "passed"
+    },
+    {
+      "id": "B3",
+      "role": "paired_treatment",
+      "experienceContext": "approved_and_delivered",
+      "providerTokenVolume": 214554,
+      "modelSteps": 7,
+      "toolCalls": 18,
+      "elapsedSeconds": 26.5,
+      "outcome": "passed"
+    }
+  ],
+  "pairedChange": {
+    "controlRun": "B2",
+    "treatmentRun": "B3",
+    "providerTokenVolumePercent": -65.94229584806945,
+    "modelStepsPercent": -46.15384615384615,
+    "toolCallsPercent": -45.45454545454545,
+    "elapsedSecondsPercent": -49.61977186311787
+  },
+  "measurement": {
+    "providerTokenVolumeFormula": "uncachedInputTokens + cacheReadTokens + cacheWriteTokens + outputTokens",
+    "isDirectCost": false,
+    "source": "DSH Session projection and v3 event log"
+  },
+  "privateSourceIntegrity": {
+    "description": "Private de-identified analyst record retained outside the public snapshot; raw Session bodies are not published",
+    "sha256": "9dbf3c5e9201fe163d159c9e5d884e8daaecd963d1e38901ddefca81b29100cc"
+  },
+  "nonClaims": [
+    "not an average or guaranteed saving",
+    "not a provider invoice or currency comparison",
+    "not generalization beyond one task family",
+    "not automatic tool execution",
+    "not evidence that an unapproved or incorrect experience helps"
+  ]
+}

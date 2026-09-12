@@ -1,0 +1,13 @@
+title = "Experience Map public secret scan"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public projection identifiers and one synthetic component fixture"
+regexTarget = "match"
+regexes = [
+  '''projectionKey\s*:\s*['"]experience-(?:suggestions|retrieval|learning|relation-map)-v[0-9]+['"]''',
+  '''SUGGESTION_PROJECTION_KEY\s*[:=]\s*['"]experience-suggestions-v1['"]''',
+  '''incomingComponentKey\s*:\s*['"]environment_scope-0['"]'''
+]

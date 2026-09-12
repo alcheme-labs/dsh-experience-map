@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "experience-open-source-package-validation-v1",
+  "capturedAt": "2026-09-12T17:17:18+08:00",
+  "status": "passed_prepublication",
+  "environment": {
+    "node": "v22.23.1",
+    "packageManager": "pnpm@11.7.0",
+    "baseCommit": "77ee73d75adcb0e8d091f8bfca76721ea524888e"
+  },
+  "sourceVerification": {
+    "typecheck": "passed",
+    "testFiles": 75,
+    "tests": 563,
+    "build": "passed",
+    "docsTestFiles": 2,
+    "docsTests": 13
+  },
+  "publicBoundaryVerification": {
+    "publicFileCount": 233,
+    "releaseBoundaryTests": 5,
+    "exportManifestCreated": true,
+    "privateHistoryIncluded": false,
+    "cleanSnapshotReleaseCheck": {
+      "typecheck": "passed",
+      "testFiles": 75,
+      "tests": 563,
+      "build": "passed",
+      "docsTestFiles": 1,
+      "docsTests": 5,
+      "productionDependencyAudit": "no known vulnerabilities"
+    }
+  },
+  "npmTarball": {
+    "package": "@alcheme/dsh-experience-map@0.1.0-beta.1",
+    "file": "alcheme-dsh-experience-map-0.1.0-beta.1.tgz",
+    "sha256": "e0af9ca7da39f8fb2c4ea153a6c11c5c45bfbc81c6ab04359447ac93342d3f1c",
+    "bytes": 1195364,
+    "unpackedBytes": 5808700,
+    "entryCount": 166,
+    "forbiddenDevelopmentOrModelEntries": 0,
+    "hostAndCliExportsLoaded": true,
+    "packedArtifactSecretScan": "passed"
+  },
+  "freshDefaultConsumerInstall": {
+    "installedPackageCount": 2,
+    "requiredRuntimeDependencies": {
+      "minisearch": "7.2.0"
+    },
+    "transformersJsInstalled": false,
+    "transformersJsOptionalPeer": true,
+    "preinstallNodeCheck": "passed"
+  },
+  "hostIntegrity": {
+    "deepseekHarnessTrackedChangesIntroduced": 0,
+    "preexistingDeepseekHarnessUntrackedDocumentsPreserved": 9
+  },
+  "notPerformed": [
+    "no public Git remote was created or pushed",
+    "no npm version was published",
+    "no existing private Git history was rewritten"
+  ]
+}

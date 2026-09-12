@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a reproducible Experience Map defect without private Session data.
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, raw Session logs, local databases, or private model content.
+  - type: input
+    id: version
+    attributes:
+      label: Plugin commit or version
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Node, Harness, and profile versions
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal de-identified reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true

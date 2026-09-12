@@ -1,0 +1,11 @@
+{"schemaVersion":"experience-release-event-v1","runId":"A1","event":"task_completed","experienceContext":"absent","outcome":"passed"}
+{"schemaVersion":"experience-release-event-v1","runId":"A1","event":"usage_measured","providerTokenVolume":728159,"modelSteps":16,"toolCalls":41,"elapsedSeconds":50.9}
+{"schemaVersion":"experience-release-event-v1","runId":"B2","event":"experience_match","disposition":"ready_for_approval"}
+{"schemaVersion":"experience-release-event-v1","runId":"B2","event":"experience_delivery","status":"not_delivered","reason":"plan_not_approved"}
+{"schemaVersion":"experience-release-event-v1","runId":"B2","event":"task_completed","outcome":"passed"}
+{"schemaVersion":"experience-release-event-v1","runId":"B2","event":"usage_measured","providerTokenVolume":629972,"modelSteps":13,"toolCalls":33,"elapsedSeconds":52.6}
+{"schemaVersion":"experience-release-event-v1","runId":"B3","event":"experience_match","disposition":"ready_for_approval"}
+{"schemaVersion":"experience-release-event-v1","runId":"B3","event":"plan_decision","status":"approved"}
+{"schemaVersion":"experience-release-event-v1","runId":"B3","event":"experience_delivery","status":"included_in_request"}
+{"schemaVersion":"experience-release-event-v1","runId":"B3","event":"task_completed","outcome":"passed"}
+{"schemaVersion":"experience-release-event-v1","runId":"B3","event":"usage_measured","providerTokenVolume":214554,"modelSteps":7,"toolCalls":18,"elapsedSeconds":26.5}

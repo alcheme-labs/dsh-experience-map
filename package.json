@@ -1,0 +1,185 @@
+{
+  "name": "@alcheme/dsh-experience-map",
+  "version": "0.1.0-beta.1",
+  "description": "Evidence-governed experience memory for DeepSeek Harness",
+  "author": "杭州星原驱动科技有限公司",
+  "license": "MIT",
+  "homepage": "https://github.com/alcheme-labs/dsh-experience-map#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alcheme-labs/dsh-experience-map.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alcheme-labs/dsh-experience-map/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "agent-memory",
+    "experience-replay",
+    "semantic-retrieval",
+    "local-first",
+    "dsh-plugin"
+  ],
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": "0.1.5-rc.2"
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./cli/startup": {
+      "types": "./lib/types/cli/startup.d.ts",
+      "default": "./lib/cli/startup.js"
+    },
+    "./cli/runner": {
+      "types": "./lib/types/cli/runner.d.ts",
+      "default": "./lib/cli/runner.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-settings-plugins"
+      ]
+    }
+  },
+  "files": [
+    "lib",
+    "check-node-version.mjs",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "THIRD_PARTY_NOTICES.md",
+    "NOTICE",
+    "LICENSE"
+  ],
+  "scripts": {
+    "preinstall": "node check-node-version.mjs",
+    "build": "node build.mjs && pnpm run build:types",
+    "build:types": "tsc -p tsconfig.host.json --emitDeclarationOnly --outDir lib/types && tsc -p tsconfig.client.json --emitDeclarationOnly --outDir lib/types",
+    "typecheck": "tsc -p tsconfig.host.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.tests.json --noEmit",
+    "test": "vitest run --exclude 'tests/docs/**'",
+    "test:docs": "vitest run tests/docs",
+    "benchmark:auto:e0": "node scripts/auto-e0-runner.mjs",
+    "benchmark:auto:e4": "node scripts/auto-e4-runner.mjs",
+    "benchmark:corr:e2": "node scripts/corr-e2-runner.mjs",
+    "benchmark:corr:e5": "node scripts/corr-e5-runner.mjs",
+    "inventory:auto:e0": "node scripts/auto-e0-supply-chain.mjs",
+    "smoke:auto:e0:packed": "node scripts/auto-e0-packed-smoke.mjs",
+    "release:export": "node scripts/export-public-repo.mjs",
+    "release:check": "pnpm run check && pnpm run test:docs && node scripts/public-release-check.mjs",
+    "audit:prod": "pnpm audit --prod --audit-level high",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build",
+    "verify:m2:runtime": "node scripts/m2-runtime-verifier.mjs",
+    "verify:m4:runtime": "node scripts/m4-runtime-verifier.mjs",
+    "verify:m5:runtime": "node scripts/m5-runtime-verifier.mjs",
+    "verify:m6:runtime": "node scripts/m6-runtime-verifier.mjs",
+    "verify:m7:runtime": "node scripts/m7-runtime-verifier.mjs",
+    "prepack": "pnpm run check"
+  },
+  "dependencies": {
+    "minisearch": "7.2.0"
+  },
+  "peerDependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "@deepseek-ai/cordis": "4.0.1 || ^4.0.2",
+    "@deepseek-ai/dsh-agent": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-brand": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-connection": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-locale": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-session": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-cmdline": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-fs": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-jobs": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session-query": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-shell": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-tools": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-user-questions": "0.1.5-rc.2",
+    "@deepseek-ai/schemastery": "3.18.1 || ^3.18.2",
+    "react": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@huggingface/transformers": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/cordis-plugin-loader": "1.0.3",
+    "@deepseek-ai/dsh-agent": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-brand": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-connection": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-locale": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-session": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-cmdline": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-code-runtime": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-fs": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-http-proxy": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-invariants": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-jobs": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-sandbox": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-scope": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session-projection": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session-query": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session-title": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-shell": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-subprocess": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-system-prompt": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-tool-todo": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-tools": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-user-approval": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-user-questions": "0.1.5-rc.2",
+    "@deepseek-ai/schemastery": "3.18.2",
+    "@types/node": "^24.3.0",
+    "@types/react": "~18.3.1",
+    "commander": "^15.0.0",
+    "esbuild": "^0.27.0",
+    "lightningcss": "1.32.0",
+    "react": "^18.3.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}

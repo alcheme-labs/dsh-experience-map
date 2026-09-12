@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "experience-open-source-security-audit-v1",
+  "capturedAt": "2026-09-12T17:17:18+08:00",
+  "status": "public_snapshot_passed_private_history_prohibited",
+  "scanner": {
+    "name": "gitleaks",
+    "version": "8.30.1",
+    "secretValuesStoredInReport": false
+  },
+  "privateDevelopmentHistory": {
+    "auditedThroughCommit": "77ee73d75adcb0e8d091f8bfca76721ea524888e",
+    "commitCount": 51,
+    "gitleaksHeuristicFindings": 16,
+    "confirmedCredentialFindings": 0,
+    "findingClasses": [
+      "synthetic projection and component keys",
+      "SHA-256 fixture identifiers and filenames"
+    ],
+    "manualPrivacyFindings": [
+      "one tracked raw historical Session body",
+      "absolute user and temporary paths in internal evidence",
+      "internal agent handoffs and acceptance artifacts"
+    ],
+    "directPublicPushAllowed": false,
+    "resolution": "preserve private evidence history and publish only a new allowlisted history"
+  },
+  "cleanPublicSnapshot": {
+    "fileCount": 233,
+    "rawSessionFiles": 0,
+    "credentialFiles": 0,
+    "localDatabaseFiles": 0,
+    "absoluteMacUserPaths": 0,
+    "unresolvedGitleaksFindings": 0,
+    "allowlistScope": [
+      "fixed experience projection identifiers",
+      "one named synthetic component fixture"
+    ]
+  },
+  "npmPackage": {
+    "entryCount": 166,
+    "unresolvedGitleaksFindings": 0,
+    "rawSessionOrEvidenceEntries": 0
+  },
+  "dependencyAudit": {
+    "defaultProductionInstall": "no known vulnerabilities",
+    "transformersJsAutomaticallyInstalled": false,
+    "optionalPeerAdvisoriesAtAuditTime": [
+      "GHSA-xcpc-8h2w-3j85",
+      "GHSA-f88m-g3jw-g9cj",
+      "GHSA-rgj7-g3m4-5g8c"
+    ],
+    "control": "explicit operator installation only; disabled by default; pinned local text artifact required"
+  },
+  "remainingExternalActions": [
+    "create the new public repository from the clean snapshot",
+    "enable GitHub private security advisories and secret scanning",
+    "repeat scans after the final version change and before npm publication"
+  ]
+}

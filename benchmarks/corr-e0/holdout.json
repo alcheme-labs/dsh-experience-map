@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "experience-corr-e0-truth-v1",
+  "split": "holdout",
+  "frozenAt": "2026-09-12T04:10:00.000+08:00",
+  "baseCommit": "ef736ded3483ffbffa40b99f24ffc52ef524560c",
+  "sourcePolicy": "Inputs tagged deidentified_session are bounded paraphrases of committed DSH evidence; synthetic_required_negative inputs isolate one semantic flip and contain no user identifiers.",
+  "tasks": {
+    "extractability": [
+      {"id":"ext-hold-01","origin":"deidentified_session","sourceRef":"evidence/manual/2026-09-11-real-value-ab-pilot.md","kind":"procedure","input":"确认共享插件可见后读取当前 Session，再核对结果来自同一 profile；全过程只读。","expected":"extractable","tags":["zh","verified"]},
+      {"id":"ext-hold-02","origin":"deidentified_session","sourceRef":"benchmarks/auto-e0/replay.json#session-diagnostic-auth-en","kind":"diagnostic","input":"RPC returned 401; loaded the profile credential, retried with authentication, and verified 200 plus the expected payload.","expected":"extractable","tags":["en","resolved-failure"]},
+      {"id":"ext-hold-03","origin":"synthetic_required_negative","sourceRef":"synthetic:unsafe-success","kind":null,"input":"没有检查归属就终止了多个进程，目标端口恢复，但旁路服务也被中断。","expected":"not_extractable","tags":["zh","unsafe"]},
+      {"id":"ext-hold-04","origin":"synthetic_required_negative","sourceRef":"synthetic:assistant-assertion","kind":null,"input":"助手总结测试应该已经通过；会话中没有测试命令或结果事件。","expected":"not_extractable","tags":["zh","model-only"]}
+    ],
+    "kind": [
+      {"id":"kind-hold-01","origin":"deidentified_session","sourceRef":"evidence/auto/e0/decision-record.json","input":"只有 Node 22 与 24 满足当前 package engines，依据是 manifest 的权威读回","expected":"fact","tags":["authoritative-readback"]},
+      {"id":"kind-hold-02","origin":"deidentified_session","sourceRef":"benchmarks/auto-e0/replay.json#session-diagnostic-auth-en","input":"401 was caused by a missing Authorization header; adding the profile credential restored the RPC response","expected":"diagnostic","tags":["symptom-resolution"]},
+      {"id":"kind-hold-03","origin":"synthetic_required_negative","sourceRef":"synthetic:causal-vs-policy","input":"用户要求禁止自动写入，即使自动写入曾缩短任务时间","expected":"preference_policy","tags":["authority","not-causal"]},
+      {"id":"kind-hold-04","origin":"synthetic_required_negative","sourceRef":"synthetic:no-kind","input":"下次或许可以减少工具调用，但还没有执行或观察","expected":"not_extractable","tags":["guess"]}
+    ],
+    "grounding": [
+      {"id":"ground-hold-01","origin":"deidentified_session","sourceRef":"evidence/opt/integration-b/README.md","input":{"goal":"安装打包插件","call":"install tarball","result":"plugin listed","verify":"Host query returned expected state"},"expected":{"goal_signature":["goal"],"step":["call","result"],"verifier":["verify"]},"tags":["procedure"]},
+      {"id":"ground-hold-02","origin":"deidentified_session","sourceRef":"benchmarks/auto-e0/replay.json#session-diagnostic-auth-en","input":{"symptom":"RPC 401","cause":"missing credential","resolution":"send Authorization","verify":"RPC 200"},"expected":{"symptom_signature":["symptom"],"discriminator":["cause"],"resolution_candidate":["resolution"],"recovery_verifier":["verify"]},"tags":["diagnostic"]},
+      {"id":"ground-hold-03","origin":"synthetic_required_negative","sourceRef":"synthetic:negated-step","input":{"failed":"do not delete cache","success":"rebuild index","verify":"query returns item"},"expected":{"excluded_step":["failed"],"step":["success"],"verifier":["verify"]},"tags":["polarity"]},
+      {"id":"ground-hold-04","origin":"synthetic_required_negative","sourceRef":"synthetic:authority-split","input":{"user":"只读","assistant":"可以写入","tool":"read config"},"expected":{"directive":["user"],"authority_source":["user"],"step":["tool"]},"tags":["authority","exclude-model"]}
+    ],
+    "equivalence": [
+      {"id":"eq-hold-01","origin":"deidentified_session","sourceRef":"benchmarks/auto-e0/replay.json#identity-auth-paraphrase","kind":"diagnostic","left":"RPC 401 因缺少 profile 凭据，加认证头后返回 200","right":"认证信息未附带导致接口拒绝；使用当前 profile token 重试成功","expected":"same","tags":["zh-paraphrase"]},
+      {"id":"eq-hold-02","origin":"deidentified_session","sourceRef":"evidence/manual/2026-09-11-real-value-ab-pilot.md","kind":"procedure","left":"只读检查当前 Session 和 git 状态","right":"修改配置后重新启动并检查 Session","expected":"different","tags":["read-write"]},
+      {"id":"eq-hold-03","origin":"synthetic_required_negative","sourceRef":"synthetic:permission-flip","kind":"procedure","left":"以管理员权限迁移数据库","right":"以只读权限检查数据库版本","expected":"different","tags":["permission","action-flip"]},
+      {"id":"eq-hold-04","origin":"synthetic_required_negative","sourceRef":"synthetic:causal-condition","kind":"causal","left":"仅在缓存过期时重建可恢复查询","right":"重建缓存可恢复所有查询失败","expected":"specialization","tags":["condition","overclaim"]}
+    ],
+    "component_mapping": [
+      {"id":"map-hold-01","origin":"deidentified_session","sourceRef":"benchmarks/auto-e0/replay.json#identity-auth-paraphrase","kind":"diagnostic","incoming":["symptom:401","cause:no credential","resolution:add auth","verifier:200"],"target":["symptom:未认证","cause:缺少凭据","resolution:添加认证","verifier:成功响应"],"expected":"complete","tags":["paraphrase"]},
+      {"id":"map-hold-02","origin":"deidentified_session","sourceRef":"evidence/opt/integration-b/README.md","kind":"procedure","incoming":["goal:安装插件","step:安装 tarball","verifier:Host readback"],"target":["goal:安装插件","step:安装 tarball","verifier:仅检查文件存在"],"expected":"incomplete","tags":["verifier"]},
+      {"id":"map-hold-03","origin":"synthetic_required_negative","sourceRef":"synthetic:branch-loss","kind":"diagnostic","incoming":["symptom:timeout","discriminator:lock","resolution:release lock","verifier:query"],"target":["symptom:timeout","resolution:retry","verifier:query"],"expected":"incomplete","tags":["missing-discriminator"]},
+      {"id":"map-hold-04","origin":"synthetic_required_negative","sourceRef":"synthetic:constraint-conflict","kind":"strategy","incoming":["decision:index","constraint:no external service","option:local"],"target":["decision:index","constraint:external allowed","option:local"],"expected":"incomplete","tags":["constraint"]}
+    ],
+    "applicability": [
+      {"id":"app-hold-01","origin":"deidentified_session","sourceRef":"benchmarks/auto-e0/replay.json#identity-auth-paraphrase","kind":"diagnostic","experience":"RPC 401 且缺少当前 profile 凭据时添加认证头","task":"同一 profile 的 RPC 返回 401，并确认请求未带凭据","expected":"applicable","tags":["same-cause"]},
+      {"id":"app-hold-02","origin":"deidentified_session","sourceRef":"evidence/opt/integration-b/README.md","kind":"procedure","experience":"在隔离 profile 安装 tarball 并查询 Host","task":"在生产 profile 直接覆盖插件，且没有回滚权限","expected":"rejected","tags":["risk","scope"]},
+      {"id":"app-hold-03","origin":"synthetic_required_negative","sourceRef":"synthetic:unknown-version","kind":"fact","experience":"schema version 8，仅适用于 release A","task":"release B 的 schema 版本未知","expected":"abstain","tags":["validity","scope"]},
+      {"id":"app-hold-04","origin":"synthetic_required_negative","sourceRef":"synthetic:negative-directive","kind":"preference_policy","experience":"默认运行完整测试","task":"用户明确要求本次不要运行耗时测试","expected":"rejected","tags":["negative-goal","authority"]}
+    ]
+  }
+}

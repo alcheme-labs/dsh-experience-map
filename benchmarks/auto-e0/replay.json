@@ -1,0 +1,372 @@
+{
+  "schemaVersion": "experience-auto-e0-replay-v1",
+  "frozenAt": "2026-09-10T08:30:00.000Z",
+  "baseCommit": "5543cb6",
+  "description": "Redacted bilingual replay derived from committed M0-M7 DSH Web startup evidence plus adversarial tool/error cases. It freezes four independent labels: extraction, kind, exact identity and recall.",
+  "qualityGates": {
+    "extractionPrecision": 1,
+    "extractionRecall": 0.75,
+    "kindAccuracy": 0.75,
+    "identityFalseMerges": 0,
+    "identityRecall": 0.75,
+    "recallHarmfulMatches": 0,
+    "recallTop1Accuracy": 0.75,
+    "warmP95Ms": 750,
+    "rssDeltaMiB": 650
+  },
+  "classificationPrototypes": [
+    {
+      "id": "procedure",
+      "text": "可复用流程：有明确目标和前置条件，按顺序执行多个工具步骤，最终由独立 verifier 验证成功。 Reusable procedure with ordered tool actions, prerequisites, stable successful path, and an authoritative final verifier."
+    },
+    {
+      "id": "diagnostic",
+      "text": "排错经验：出现具体症状或错误码，检查并排除错误假设，定位原因，执行修复并由 recovery verifier 证明恢复。 Diagnostic experience with a symptom or error code, discriminating checks, rejected hypotheses, a resolution, and verified recovery."
+    },
+    {
+      "id": "not_extractable",
+      "text": "不可提炼：只是讨论或猜测，没有实际工具结果；任务失败且没有找到解决方案；只有模型声称成功，没有权威验证；一次性偶然信息。 Not reusable: brainstorming without execution, unresolved failure, model-only success claim, or one-off noise without a verifier."
+    }
+  ],
+  "sessionCases": [
+    {
+      "id": "session-procedure-dsh-web-zh",
+      "language": "zh-mixed",
+      "sourceRef": "evidence/m0/episode-dossier.md#L67-L81",
+      "transcript": "目标是启动本地 DeepSeek Harness Web。直接运行 pnpm 失败后改用 corepack pnpm 安装依赖，先完成 frontend build，再执行 dsh web。最后核对进程与 127.0.0.1 监听者、token exchange、cookie authenticated root 200 和 settings/describe RPC，清理时确认同一进程和端口已经退出。",
+      "shouldExtract": true,
+      "kind": "procedure"
+    },
+    {
+      "id": "session-diagnostic-missing-dist-zh",
+      "language": "zh-mixed",
+      "sourceRef": "evidence/m0/episode-dossier.md#L75-L81",
+      "transcript": "dsh web 已打印 readiness URL，但带 cookie 的根页面返回 HTTP 404。检查发现 host frontend-static 可以启动，apps/web/dist/index.html 尚未生成；运行 pnpm build 后重启，authenticated root 返回 200 且 boot manifest 与 RPC 都通过，因此 URL 输出本身不是成功证据。",
+      "shouldExtract": true,
+      "kind": "diagnostic"
+    },
+    {
+      "id": "session-diagnostic-port-en",
+      "language": "en-mixed",
+      "sourceRef": "synthetic:redacted-tool-negative/eaddrinuse",
+      "transcript": "The local server failed with EADDRINUSE on 127.0.0.1:3080. The agent inspected the listener owner, verified it belonged to the current workspace, terminated only that owned process, retried the same command, and verified the new socket plus health endpoint before cleanup.",
+      "shouldExtract": true,
+      "kind": "diagnostic"
+    },
+    {
+      "id": "session-procedure-auth-en",
+      "language": "en-mixed",
+      "sourceRef": "evidence/m0/runs/m0-20260831-r3/runtime-evidence.json",
+      "transcript": "For local DSH Web readiness, first confirm anonymous root returns 401, exchange the one-time launch token for an authority-bound cookie, follow the clean-root redirect, require authenticated root 200 with a parseable boot manifest, then call an authenticated Host RPC and verify owned cleanup.",
+      "shouldExtract": true,
+      "kind": "procedure"
+    },
+    {
+      "id": "session-diagnostic-node-engine-zh",
+      "language": "zh-mixed",
+      "sourceRef": "synthetic:redacted-tool-negative/node-engine",
+      "transcript": "pnpm check 在 Node 23 下出现 engine 不支持并伴随原生测试异常。读取 package.json engines 后切换到 Node 22.19，再运行相同 typecheck、Vitest 和 build 全部通过，并确认失败不是业务代码造成。",
+      "shouldExtract": true,
+      "kind": "diagnostic"
+    },
+    {
+      "id": "session-unresolved-failure-zh",
+      "language": "zh-mixed",
+      "sourceRef": "synthetic:redacted-required-negative/unresolved",
+      "transcript": "执行数据库迁移报 ETIMEDOUT，随后尝试增加超时和重跑仍然失败。会话结束时没有定位网络、权限还是服务端原因，也没有任何成功读回。",
+      "shouldExtract": false,
+      "kind": null
+    },
+    {
+      "id": "session-brainstorm-only-en",
+      "language": "en",
+      "sourceRef": "synthetic:redacted-required-negative/brainstorm",
+      "transcript": "The agent proposed trying curl, rebuilding the frontend, checking the port, and perhaps changing the proxy. No tool was run, no observation was recorded, and the user ended the conversation before choosing a path.",
+      "shouldExtract": false,
+      "kind": null
+    },
+    {
+      "id": "session-model-claim-only-zh",
+      "language": "zh",
+      "sourceRef": "synthetic:redacted-required-negative/model-claim",
+      "transcript": "模型回复说服务应该已经恢复并建议保存这个方案，但没有工具输出、端口所有权、HTTP 读回或用户确认，Session 也没有 terminal success 证据。",
+      "shouldExtract": false,
+      "kind": null
+    },
+    {
+      "id": "session-one-off-copy-en",
+      "language": "en",
+      "sourceRef": "synthetic:redacted-required-negative/one-off",
+      "transcript": "A temporary file was copied to a user-selected folder. The copy succeeded once, but there was no repeated task family, decision rule, failure branch, environmental condition, or reusable verification procedure.",
+      "shouldExtract": false,
+      "kind": null
+    }
+  ],
+  "identityCases": [
+    {
+      "id": "identity-dsh-web-bilingual",
+      "left": { "kind": "procedure", "scope": "local", "taskFamily": "dsh_web_startup", "text": "用 corepack pnpm 构建前端，启动本地 dsh web，验证 authenticated RPC 并清理所属进程" },
+      "right": { "kind": "procedure", "scope": "local", "taskFamily": "dsh_web_startup", "text": "Build the frontend with Corepack pnpm, start local DSH Web, verify authenticated Host RPC, then clean up the owned process" },
+      "sameExperience": true
+    },
+    {
+      "id": "identity-missing-dist-paraphrase",
+      "left": { "kind": "diagnostic", "scope": "local", "taskFamily": "dsh_web_startup", "text": "authenticated root 404 because dist/index.html is absent; run frontend build and verify boot manifest" },
+      "right": { "kind": "diagnostic", "scope": "local", "taskFamily": "dsh_web_startup", "text": "已认证根页面返回 404 时检查前端产物，缺少 dist 文件先构建，再验证 manifest 和 RPC" },
+      "sameExperience": true
+    },
+    {
+      "id": "identity-port-paraphrase",
+      "left": { "kind": "diagnostic", "scope": "local", "taskFamily": "process_startup", "text": "EADDRINUSE: inspect the listener owner, stop only the owned process, retry and verify the socket" },
+      "right": { "kind": "diagnostic", "scope": "local", "taskFamily": "process_startup", "text": "端口被占用时先确认监听进程归属，只终止当前任务拥有的进程，然后重启并核对端口" },
+      "sameExperience": true
+    },
+    {
+      "id": "identity-local-vs-public",
+      "left": { "kind": "procedure", "scope": "local", "taskFamily": "web_startup", "text": "start a loopback web server and verify local authenticated RPC" },
+      "right": { "kind": "procedure", "scope": "public", "taskFamily": "web_deployment", "text": "deploy a public web service behind TLS and CDN, then monitor external availability" },
+      "sameExperience": false
+    },
+    {
+      "id": "identity-same-symptom-different-cause",
+      "left": { "kind": "diagnostic", "scope": "local", "taskFamily": "web_startup", "text": "HTTP 404 because the frontend dist artifact is missing; build it" },
+      "right": { "kind": "diagnostic", "scope": "local", "taskFamily": "web_startup", "text": "HTTP 404 because the reverse proxy route is missing; repair route configuration" },
+      "sameExperience": false
+    },
+    {
+      "id": "identity-401-vs-404",
+      "left": { "kind": "diagnostic", "scope": "local", "taskFamily": "dsh_web_startup", "text": "HTTP 401 means launch-token exchange or cookie authorization is missing" },
+      "right": { "kind": "diagnostic", "scope": "local", "taskFamily": "dsh_web_startup", "text": "HTTP 404 after authentication means the frontend build artifact is missing" },
+      "sameExperience": false
+    },
+    {
+      "id": "identity-eaddrinuse-vs-refused",
+      "left": { "kind": "diagnostic", "scope": "local", "taskFamily": "process_startup", "text": "EADDRINUSE requires resolving an existing listener conflict" },
+      "right": { "kind": "diagnostic", "scope": "local", "taskFamily": "process_startup", "text": "ECONNREFUSED means no reachable listener and requires checking service readiness" },
+      "sameExperience": false
+    },
+    {
+      "id": "identity-kind-boundary",
+      "left": { "kind": "procedure", "scope": "local", "taskFamily": "dsh_web_startup", "text": "ordered steps to start and verify DSH Web" },
+      "right": { "kind": "diagnostic", "scope": "local", "taskFamily": "dsh_web_startup", "text": "diagnose why DSH Web returns an authenticated 404" },
+      "sameExperience": false
+    }
+  ],
+  "experiences": [
+    {
+      "id": "exp-dsh-local-start",
+      "kind": "procedure",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": [],
+      "title": "Start and verify local DSH Web",
+      "text": "Use corepack pnpm to install and build the frontend, start dsh web on loopback, exchange the launch token, require cookie-authenticated root 200 and Host RPC readback, then verify owned cleanup. 本地启动 DSH Web、构建前端、认证 RPC 和进程清理。"
+    },
+    {
+      "id": "exp-dsh-missing-dist",
+      "kind": "diagnostic",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": ["http_404"],
+      "title": "Authenticated root 404 from missing frontend artifact",
+      "text": "When DSH Web is listening but authenticated root returns HTTP 404, inspect dist/index.html. Build the frontend artifact, restart, and verify boot manifest plus authenticated RPC. 已认证页面 404 且缺少前端 dist 产物。"
+    },
+    {
+      "id": "exp-dsh-auth-401",
+      "kind": "diagnostic",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": ["http_401"],
+      "title": "Anonymous or missing-cookie DSH root returns 401",
+      "text": "HTTP 401 on local DSH Web indicates the launch token was not exchanged or the authority-bound cookie is absent. Complete token exchange and verify authenticated RPC. 未完成 token exchange 或 cookie 授权。"
+    },
+    {
+      "id": "exp-port-in-use",
+      "kind": "diagnostic",
+      "taskFamily": "process_startup",
+      "targetExposure": "local",
+      "errorCodes": ["eaddrinuse"],
+      "title": "Resolve an owned EADDRINUSE listener conflict",
+      "text": "For EADDRINUSE, inspect the exact port listener and ownership. Stop only an owned stale process, retry startup, then verify the new socket and cleanup. 端口占用只终止任务拥有的监听进程。"
+    },
+    {
+      "id": "exp-connection-refused",
+      "kind": "diagnostic",
+      "taskFamily": "process_startup",
+      "targetExposure": "local",
+      "errorCodes": ["econnrefused"],
+      "title": "Diagnose ECONNREFUSED with no reachable listener",
+      "text": "ECONNREFUSED means the target has no reachable listener. Check dependency readiness, bind address and port before retrying; do not kill an unrelated process. 服务未监听或地址端口错误。"
+    },
+    {
+      "id": "exp-public-web-deploy",
+      "kind": "procedure",
+      "taskFamily": "web_deployment",
+      "targetExposure": "public",
+      "errorCodes": [],
+      "title": "Deploy a public web service behind TLS and CDN",
+      "text": "Build a release artifact, deploy the public service behind TLS and CDN, verify DNS and certificate scope, then monitor external availability. 公网部署、TLS、CDN 和外部可用性监控。"
+    },
+    {
+      "id": "exp-tls-expired",
+      "kind": "diagnostic",
+      "taskFamily": "tls_diagnosis",
+      "targetExposure": "public",
+      "errorCodes": ["cert_has_expired"],
+      "title": "Diagnose CERT_HAS_EXPIRED",
+      "text": "For CERT_HAS_EXPIRED, inspect certificate validity and served chain, renew the correct certificate, then verify the public hostname and expiry from an external client. 证书过期后更新正确证书链并从公网复核。"
+    },
+    {
+      "id": "exp-database-timeout",
+      "kind": "diagnostic",
+      "taskFamily": "database_connection",
+      "targetExposure": "local",
+      "errorCodes": ["etimedout"],
+      "title": "Diagnose ETIMEDOUT for a database connection",
+      "text": "For PostgreSQL ETIMEDOUT, verify network reachability, endpoint, firewall and server readiness before changing client timeout. 数据库连接超时先核对网络与服务端可达性。"
+    },
+    {
+      "id": "exp-node-engine",
+      "kind": "diagnostic",
+      "taskFamily": "build_environment",
+      "targetExposure": "local",
+      "errorCodes": ["unsupported_engine"],
+      "title": "Use the repository-supported Node engine before debugging tests",
+      "text": "When package engines reject the active Node version, switch to the declared supported Node release and rerun the same typecheck, tests and build before diagnosing product code. Node engine 不支持时先切换仓库声明版本。"
+    }
+  ],
+  "recallCases": [
+    {
+      "id": "recall-local-start-zh",
+      "language": "zh-mixed",
+      "query": "帮我在本地启动 DeepSeek Harness Web，用 pnpm 构建后要验证登录 cookie 和 Host RPC，结束时清理进程",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": [],
+      "expectedTop1": "exp-dsh-local-start",
+      "forbiddenIds": ["exp-public-web-deploy"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-local-start-en",
+      "language": "en-mixed",
+      "query": "Build and launch local DSH Web, prove the authenticated root and settings RPC, then clean up the owned listener",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": [],
+      "expectedTop1": "exp-dsh-local-start",
+      "forbiddenIds": ["exp-public-web-deploy"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-missing-dist-zh",
+      "language": "zh-mixed",
+      "query": "dsh web 端口已经监听，完成认证后根页面还是 HTTP 404，怀疑没有生成 dist/index.html",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": ["http_404"],
+      "expectedTop1": "exp-dsh-missing-dist",
+      "forbiddenIds": ["exp-dsh-auth-401"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-auth-401-zh",
+      "language": "zh-mixed",
+      "query": "本地 DSH Web 匿名访问返回 HTTP 401，我还没有交换 launch token 和 cookie",
+      "taskFamily": "dsh_web_startup",
+      "targetExposure": "local",
+      "errorCodes": ["http_401"],
+      "expectedTop1": "exp-dsh-auth-401",
+      "forbiddenIds": ["exp-dsh-missing-dist"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-port-en",
+      "language": "en-mixed",
+      "query": "The dev server cannot bind 127.0.0.1:3080 because of EADDRINUSE; safely resolve the listener conflict",
+      "taskFamily": "process_startup",
+      "targetExposure": "local",
+      "errorCodes": ["eaddrinuse"],
+      "expectedTop1": "exp-port-in-use",
+      "forbiddenIds": ["exp-connection-refused"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-refused-zh",
+      "language": "zh-mixed",
+      "query": "连接本地服务报 ECONNREFUSED，没有进程在目标端口监听，先检查依赖是否就绪",
+      "taskFamily": "process_startup",
+      "targetExposure": "local",
+      "errorCodes": ["econnrefused"],
+      "expectedTop1": "exp-connection-refused",
+      "forbiddenIds": ["exp-port-in-use"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-public-deploy-zh",
+      "language": "zh-mixed",
+      "query": "把网站部署到公网，配置 TLS 和 CDN，并从外部监控域名可用性",
+      "taskFamily": "web_deployment",
+      "targetExposure": "public",
+      "errorCodes": [],
+      "expectedTop1": "exp-public-web-deploy",
+      "forbiddenIds": ["exp-dsh-local-start"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-tls-zh",
+      "language": "zh-mixed",
+      "query": "公网域名握手报 CERT_HAS_EXPIRED，需要定位当前提供的证书链并验证续期结果",
+      "taskFamily": "tls_diagnosis",
+      "targetExposure": "public",
+      "errorCodes": ["cert_has_expired"],
+      "expectedTop1": "exp-tls-expired",
+      "forbiddenIds": [],
+      "requiredNegative": false
+    },
+    {
+      "id": "recall-db-timeout-en",
+      "language": "en-mixed",
+      "query": "PostgreSQL connection fails with ETIMEDOUT; check network reachability and server readiness before raising timeouts",
+      "taskFamily": "database_connection",
+      "targetExposure": "local",
+      "errorCodes": ["etimedout"],
+      "expectedTop1": "exp-database-timeout",
+      "forbiddenIds": [],
+      "requiredNegative": false
+    },
+    {
+      "id": "recall-node-engine-zh",
+      "language": "zh-mixed",
+      "query": "pnpm check 提示 unsupported engine，现在是 Node 23，但 package.json 只支持 Node 22.19 或 24+",
+      "taskFamily": "build_environment",
+      "targetExposure": "local",
+      "errorCodes": ["unsupported_engine"],
+      "expectedTop1": "exp-node-engine",
+      "forbiddenIds": [],
+      "requiredNegative": false
+    },
+    {
+      "id": "recall-unrelated-poem",
+      "language": "zh",
+      "query": "写一首关于秋天的五言绝句，不需要运行任何开发工具",
+      "taskFamily": "creative_writing",
+      "targetExposure": "local",
+      "errorCodes": [],
+      "expectedTop1": null,
+      "forbiddenIds": ["exp-dsh-local-start", "exp-public-web-deploy", "exp-node-engine"],
+      "requiredNegative": true
+    },
+    {
+      "id": "recall-unverified-brainstorm",
+      "language": "en",
+      "query": "Brainstorm several possible commands but do not execute tools or change the environment",
+      "taskFamily": "brainstorm",
+      "targetExposure": "local",
+      "errorCodes": [],
+      "expectedTop1": null,
+      "forbiddenIds": ["exp-dsh-local-start", "exp-port-in-use"],
+      "requiredNegative": true
+    }
+  ]
+}

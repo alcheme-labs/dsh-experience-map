@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["react"]
+  },
+  "include": [
+    "src/client/**/*.ts",
+    "src/client/**/*.tsx",
+    "src/domain/kind.ts",
+    "src/runtime-settings-contract.ts",
+    "src/ids.ts",
+    "src/types.ts"
+  ]
+}
