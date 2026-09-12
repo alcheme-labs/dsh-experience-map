@@ -295,4 +295,4 @@ None.
 
 [MIT](LICENSE)
 
-Maintained by 杭州星原驱动科技有限公司 · an OPC (one-person company) practice. This is an independent, unofficial DeepSeek Harness community plugin.
+Maintained by Alcheme Labs · an OPC (one-person company) practice. This is an independent, unofficial DeepSeek Harness community plugin.
