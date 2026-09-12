@@ -4,6 +4,9 @@ All notable changes will be documented here. The project follows semantic versio
 
 ## Unreleased
 
+- Use `Alcheme Labs` as the public English maintainer name while retaining `杭州星原驱动科技有限公司` in Chinese and legal attribution.
+- Keep the published `v0.1.0-beta.1` tag and assets immutable. The next GitHub/npm artifact containing the attribution correction will be `0.1.0-beta.2`, built once and published identically to both channels.
+
 ## 0.1.0-beta.1 - 2026-09-12
 
 - Added automatic local Session suggestion detection, recent-Session grouping, cross-Session occurrence consolidation, and an explicit save gate.

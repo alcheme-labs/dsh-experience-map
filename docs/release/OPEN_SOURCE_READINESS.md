@@ -1,6 +1,6 @@
 # Open-source readiness
 
-Status: **ready to create a clean public source snapshot; the private development Git history must not be published.** The intended public remote is `https://github.com/alcheme-labs/dsh-experience-map`, but it and the first release have not been created.
+Status: **the clean public source snapshot and `v0.1.0-beta.1` GitHub Pre-release are published; npm and the DSH community listing remain pending.** The private development Git history must never be published.
 
 ## Release boundary
 
@@ -21,13 +21,13 @@ Never attach the existing private remote or push the existing private history to
 
 The first community release uses a prebuilt `pnpm pack` tarball attached to a GitHub Release. Do not advertise `github:alcheme-labs/dsh-experience-map` as the easy install path: a git dependency fetches TypeScript source without `lib/`, and pnpm 10 requires the user to allow a package `prepare` script before it can execute. A release tarball ships the already verified runtime and needs no installation-time build permission. npm publication can later provide the shortest stable install command after registry readback succeeds.
 
-After the clean repository and Release exist:
+Publication follow-up status:
 
-1. add the repository topics `dsh-plugin`, `deepseek-harness`, `agent-memory`, `experience-replay`, and `local-first`;
-2. verify the Release tarball in a fresh Web and headless Profile;
-3. verify that the immutable Release asset URL already present in `docs/release/COMMUNITY_POST.zh.md` downloads the validated tarball;
-4. publish that draft once in the official `Show Your Plugins!` Discussions category;
-5. confirm the repository appears on the `dsh-plugin` topic page and that the Discussion link opens for a signed-out reader.
+1. [x] add the repository topics `dsh-plugin`, `deepseek-harness`, `agent-memory`, `experience-replay`, and `local-first`;
+2. [ ] verify the uploaded Release tarball from its immutable URL in fresh Web and headless Profiles;
+3. [ ] publish the prepared draft once in the official `Show Your Plugins!` Discussions category;
+4. [ ] confirm the repository appears on the `dsh-plugin` topic page and that the Discussion link opens for a signed-out reader;
+5. [ ] publish the next identical artifact to GitHub and npm only after npm write authority and Registry readback succeed.
 
 The community post must remain visibly labelled unofficial and include the project URL, a concise explanation, the DSH integration path, a representative interface screenshot, and qualified rather than promised benefit measurements.
 
@@ -44,7 +44,13 @@ The community post must remain visibly labelled unofficial and include the proje
 | Functional verification | Typecheck, unit/integration tests, build, docs tests, package check | Recorded in `evidence/release/package-validation.json` |
 | Product evidence | Exact task, treatment, measurements, raw-log privacy boundary, and non-claims | `docs/release/BENEFIT_EVIDENCE.md` |
 | Community health | Contribution, conduct, support, security, changelog, CI, issue and PR templates | Present in clean snapshot |
-| External publication | Public Git remote and GitHub Release readback | Pending GitHub authentication, push, Release asset, and public readback |
+| External publication | Public Git remote and GitHub Release readback | Public repository and `v0.1.0-beta.1` Pre-release with tarball plus checksum read back; npm/community pending |
+
+## Published artifact immutability
+
+The `v0.1.0-beta.1` tag and Release assets are immutable and must not be moved or replaced. After that Release was published, the English README maintainer display was corrected from the Chinese legal entity name to `Alcheme Labs`; Chinese and legal attribution remain `杭州星原驱动科技有限公司`.
+
+Because the corrected README is part of the npm tarball, the next npm publication must use `0.1.0-beta.2`. Build that tarball once, attach the exact bytes to the matching GitHub Release, publish those same bytes to npm under the `beta` dist-tag, and verify both integrity values before updating installation guidance. Do not publish a different npm payload as `0.1.0-beta.1`.
 
 ## Dependency decision
 
@@ -56,10 +62,11 @@ Transformers.js remains supported as an optional local text-embedding runtime, b
 
 Before npm publication, rollback is simply to discard the generated public directory; the private source repository is unchanged. After publication, a defective version must be deprecated, a corrected version released, and installation guidance updated. Never reuse or move an immutable version tag. Schema v8 is pre-release and rejects older databases; a compatibility change needs its own migration and rollback evidence.
 
-## Non-goals for this preparation
+## Continuing non-goals
 
-- No GitHub repository, tag, release, or npm version is created automatically.
-- No existing Git history is rewritten.
+- No published tag or Release asset is moved, replaced, or reused.
+- No existing private Git history is rewritten or pushed.
+- No npm publication receives the `latest` dist-tag during the beta.
 - No raw Session or model body is made public to strengthen a benchmark claim.
 - No automatic Experience execution is enabled.
 - No general token-saving percentage is claimed from a one-family pilot.
