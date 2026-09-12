@@ -17,6 +17,7 @@ Experience Map helps a DeepSeek Harness agent reuse a solution that already work
 
 - [Use this package](#use-this-package)
 - [Five-minute quickstart](docs/QUICKSTART.md)
+- [Plugin interoperability](#plugin-interoperability-and-runtime-hook-boundaries)
 - [Understand the implementation](#understand-the-implementation)
 - [Further Exploration](#further-exploration)
 - [Model Experience](#model-experience)
@@ -163,6 +164,20 @@ pnpm dsh --profile experience-management experience candidate-list
 pnpm dsh --profile experience-management experience plan-list
 pnpm dsh --profile experience-management experience learning-governance-show
 ```
+
+### Plugin interoperability and runtime-hook boundaries
+
+Experience Map intentionally participates in the Host's global `agent/pre-step` flow, observes `session/event` and `llm/stream`, and installs a narrow per-Agent tool guard only while an approved Usage is active. These surfaces let it match the current direct user task, inject only the exact approved Experience Context, prove that the prepared Context reached the Session and model-request boundaries, and correlate guided steps with real tool results. They do not transfer ownership of model calls, tools, jobs, approvals, or the Session Log away from DeepSeek Harness, and they do not enable automatic tool execution.
+
+Using the same lifecycle events is not by itself a conflict. Compatibility risk appears when another plugin changes the meaning or continuity of those shared boundaries, for example when it:
+
+- short-circuits or rejects `agent/pre-step` before downstream handlers can run, or removes, reorders, or replaces messages without preserving their `source` identity;
+- applies a global allow/review/deny policy to every tool call without composing with existing Agent-scoped guards and Harness approval semantics;
+- suppresses, rewrites, or consumes `session/event`, `llm/stream`, or tool-result signals that Experience Map needs for delivery and execution correlation;
+- keeps approval, failure, or safety state globally across actors or Sessions, or substitutes that state for the Host-authenticated actor and the exact approved Plan; or
+- assumes sole ownership of hook ordering, Context injection, approval resumption, or execution-result handling.
+
+In these cases, an approved Context may never reach the model, an unapproved or altered Context may become indistinguishable from the approved snapshot, a tool result may be attributed to the wrong Usage, or one plugin's rejection may prevent the Experience flow from reaching its authoritative readback. Before co-installing plugins that intercept Agent steps, rewrite messages, or enforce tool policy, validate them together in an isolated profile: preserve actor and Session identity, preserve `message.source`, confirm approved-only Context delivery to the exact model request, keep tool guards Session-scoped, and verify interruption and tool-result readback. Experience Map does not override another plugin's denial; incompatible global policy should be narrowed, ordered, or isolated at the profile level.
 
 ### Evidence and release status
 

@@ -17,6 +17,7 @@ kind: "package-bundle"
 
 - [使用这个包](#使用这个包)
 - [五分钟上手](docs/QUICKSTART.zh.md)
+- [插件互操作](#插件互操作与运行时-hook-边界)
 - [理解实现方式](#理解实现方式)
 - [进一步了解](#进一步了解)
 - [模型体验](#模型体验)
@@ -163,6 +164,20 @@ pnpm dsh --profile experience-management experience candidate-list
 pnpm dsh --profile experience-management experience plan-list
 pnpm dsh --profile experience-management experience learning-governance-show
 ```
+
+### 插件互操作与运行时 Hook 边界
+
+Experience Map 会有意参与 Host 的全局 `agent/pre-step` 流程，观察 `session/event` 和 `llm/stream`，并且只在用户已经批准、已激活的 Usage 期间，为对应 Agent 安装窄范围工具 Guard。这些运行时位置用于匹配当前用户直接提出的任务、只注入获批 Plan 对应的精确 Experience Context、证明准备好的 Context 确实到达了 Session 和模型请求边界，以及把引导步骤与真实工具结果关联起来。模型调用、工具、后台任务、审批和 Session Log 的所有权仍然属于 DeepSeek Harness；这些机制也不会开启自动工具执行。
+
+多个插件监听同一生命周期事件，本身不构成冲突。只有其他插件改变了共享边界的语义或连续性时，才可能产生兼容风险，例如：
+
+- 在下游处理器运行前短路或拒绝 `agent/pre-step`，或者在不保留 `source` 身份的情况下删除、重排或替换消息；
+- 对所有工具调用施加全局 allow/review/deny 策略，却不与已有的 Agent 级 Guard 和 Harness 审批语义组合；
+- 抑制、改写或提前消费 Experience Map 用于交付与执行关联的 `session/event`、`llm/stream` 或工具结果信号；
+- 跨 Actor 或 Session 全局共享审批、失败或安全状态，或者用这类状态替代 Host 认证的 Actor 和当前精确获批 Plan；
+- 假定自己独占 Hook 顺序、Context 注入、审批恢复或执行结果处理。
+
+这些情况可能导致获批 Context 无法到达模型、未经批准或被改写的 Context 无法与获批快照区分、工具结果被归到错误的 Usage，或者其他插件的拒绝使 Experience 流程无法到达权威读回。共同安装会拦截 Agent 步骤、改写消息或实施工具策略的插件前，应先在隔离 Profile 中验证：Actor 与 Session 身份保持不变、`message.source` 得到保留、只有获批 Context 能进入对应模型请求、工具 Guard 按 Session 隔离，以及中断与工具结果可以正确读回。Experience Map 不会覆盖其他插件的拒绝；不兼容的全局策略应在 Profile 层缩小范围、明确顺序或彼此隔离。
 
 ### 收益证据与发布状态
 

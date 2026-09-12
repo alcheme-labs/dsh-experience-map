@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "7b5d1a9380ecca214a67d8e62c6ad7e4337ec197",
+  "sourceCommit": "fbadc9428c4316f6ce42d601bf187b58512d9bb2",
   "sourceTreeDirty": false,
   "fileCount": 232,
   "files": [
@@ -66,13 +66,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 22633,
-      "sha256": "0249e5a6af779f65ae416bb004a386abf9a9d5e48100e01f94db8fbd34532395"
+      "bytes": 25155,
+      "sha256": "f87fddb699e82e9853bd9dd2278786ff3af79bc7ac5c24ab4bad9323ecbce5c8"
     },
     {
       "path": "README.zh.md",
-      "bytes": 20874,
-      "sha256": "f36bc78de2b62a9f96fdba69b3de54911bb533b59d055771d9a51e9e23ea1d5c"
+      "bytes": 23146,
+      "sha256": "9655787302f53a596919e09fc47bc58ac48b508ab19b3f8690d42000d371acab"
     },
     {
       "path": "SECURITY.md",
