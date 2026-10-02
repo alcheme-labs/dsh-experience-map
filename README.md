@@ -78,6 +78,15 @@ By default, the Bundle learns only tasks whose completion notifications it obser
 - Automatic detection, grouping, and default recall make no external model call. This release records the optional enrichment mode and DSH generation route, but reports enrichment as `configured_but_unavailable` until a real foreground producer, disclosure/budget receipt, and supported call configuration exist; it never silently calls that route or bypasses the deterministic publication gate.
 - A new task accepts at most one primary match after type-specific hard gates, thresholds, and margin checks. Weak or inconsistent evidence abstains, and an expired Fact contributes nothing after Preflight.
 
+### Version compatibility
+
+| Experience Map version | Verified DeepSeek Harness version | npm package |
+| --- | --- | --- |
+| `0.1.0-beta.3` | `0.1.5-rc.2` | `dsh-experience-map@0.1.0-beta.3` |
+| `0.1.0-beta.6` | `0.2.0-rc.2` | `dsh-experience-map@0.1.0-beta.6` |
+
+Both npm `latest` and `beta` point to beta.6. DSH `0.1.5-rc.2` users must explicitly pin beta.3. Other DSH versions require a fresh compatibility check.
+
 ### Requirements
 
 - DeepSeek Harness `0.2.0-rc.2` for plugin `0.1.0-beta.6`. Use the published plugin `0.1.0-beta.3` with DSH `0.1.5-rc.2`.
