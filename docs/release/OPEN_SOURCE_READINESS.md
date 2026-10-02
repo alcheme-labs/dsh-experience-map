@@ -1,6 +1,6 @@
 # Open-source readiness
 
-Status: **public main and npm `0.1.0-beta.6` are published and read back. npm `beta` points to beta.6; `latest` remains beta.3. This publication updates the public source and npm package; it does not create a new GitHub Release. The DSH community listing remains pending.** The private development Git history must never be published.
+Status: **public main and npm `0.1.0-beta.6` are published and read back. npm `latest` and `beta` both point to beta.6. This publication updates the public source and npm package; it does not create a new GitHub Release. The DSH community listing remains pending.** The private development Git history must never be published.
 
 ## Release boundary
 
@@ -56,7 +56,7 @@ The `v0.1.0-beta.1` tag and Release assets remain immutable. After that Release 
 
 ## Current compatibility and behavior
 
-`0.1.0-beta.4` adapts to DSH `0.2.0-rc.2`; `beta.5` switches to notification-only learning and additive sidecar v7 migration; `beta.6` fixes management label/count wrapping and updates installation guidance. The full removed/changed/preserved behavior is recorded in [CHANGELOG.md](../../CHANGELOG.md). DSH `0.1.5-rc.2` continues to use immutable beta.3; `latest` is not moved by a beta.6 release. Previously saved canonical Experiences remain available. Historical release measurements are retained as dated evidence, not claimed rerun for beta.6.
+`0.1.0-beta.4` adapts to DSH `0.2.0-rc.2`; `beta.5` switches to notification-only learning and additive sidecar v7 migration; `beta.6` fixes management label/count wrapping and updates installation guidance. The full removed/changed/preserved behavior is recorded in [CHANGELOG.md](../../CHANGELOG.md). DSH `0.1.5-rc.2` continues to use explicitly pinned immutable beta.3; the default npm `latest` tag now targets beta.6 for DSH `0.2.0-rc.2`. Previously saved canonical Experiences remain available. Historical release measurements are retained as dated evidence, not claimed rerun for beta.6.
 
 ## Dependency decision
 

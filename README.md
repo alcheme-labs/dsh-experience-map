@@ -103,7 +103,7 @@ dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 dsh web
 ```
 
-For DSH `0.1.5-rc.2`, install the published `dsh-experience-map@0.1.0-beta.3`; its [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) remains unchanged. This repair is distributed on npm `beta`; `latest` remains `beta.3`.
+For DSH `0.1.5-rc.2`, install the published `dsh-experience-map@0.1.0-beta.3`; its [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) remains unchanged. npm `latest` and `beta` both point to `0.1.0-beta.6`, so an unversioned install targets DSH `0.2.0-rc.2`. Users of DSH `0.1.5-rc.2` must explicitly install `0.1.0-beta.3`.
 
 When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To clone this repository first:
 

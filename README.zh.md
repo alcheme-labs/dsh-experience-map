@@ -103,7 +103,7 @@ dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 dsh web
 ```
 
-如果使用 DSH `0.1.5-rc.2`，请安装已发布的 `dsh-experience-map@0.1.0-beta.3`；对应的 [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) 保持不变。本次修复通过 npm `beta` 发布；npm `latest` 仍指向 `beta.3`。
+如果使用 DSH `0.1.5-rc.2`，请安装已发布的 `dsh-experience-map@0.1.0-beta.3`；对应的 [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) 保持不变。npm `latest` 与 `beta` 均指向 `0.1.0-beta.6`，不指定版本安装时面向 DSH `0.2.0-rc.2`。使用 DSH `0.1.5-rc.2` 的用户须明确指定 `0.1.0-beta.3`。
 
 如果从 DSH 源码运行命令，把 `dsh` 换成 `pnpm dsh`。如果尚未克隆本仓库：
 

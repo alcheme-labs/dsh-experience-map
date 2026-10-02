@@ -6,6 +6,8 @@ All notable changes will be documented here. The project follows semantic versio
 
 ## 0.1.0-beta.6 - 2026-10-02
 
+- Distribution follow-up (2026-10-03): promote the existing beta.6 package to npm `latest`; `beta` also points to beta.6. No package rebuild or republish. DSH `0.1.5-rc.2` users must pin beta.3.
+
 - Keep management section labels and counts on one line without changing candidate card layout, existing section switching, or narrow-container horizontal overflow.
 - Align bilingual installation and quickstart documentation with beta.6; clarify recent-eight ordering, notification-only learning, DSH compatibility and preserved saved Experiences.
 
@@ -35,7 +37,7 @@ beta.5 **保留了定时维护**：它处理已观察任务的重试、建议过
 
 - Adapted the Host, Browser, and optional management CLI to official DSH `0.2.0-rc.2` without changing the published `beta.3` artifact for DSH `0.1.5-rc.2`.
 - Moved editable settings to DSH 0.2's volatile Config fields and verified an installed Web Profile's settings write, Host readback, and restore.
-- Aligned Cordis and Schemastery peers with the official DSH 0.2 runtime. Published the verified tarball to npm with the `beta` tag; `latest` remains on `0.1.0-beta.3`. No GitHub Release was created in this npm publication task.
+- Aligned Cordis and Schemastery peers with the official DSH 0.2 runtime. Published the verified tarball to npm with the `beta` tag; `latest` was retained on `0.1.0-beta.3` at that publication; the 2026-10-03 distribution follow-up promotes beta.6 to `latest`. No GitHub Release was created in this npm publication task.
 
 ## 0.1.0-beta.3 - 2026-09-12
 
