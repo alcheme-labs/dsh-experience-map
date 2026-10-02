@@ -1,3 +1,4 @@
+import type { Volatile } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { RuntimeSettings } from './runtime-settings-contract.js'
 
@@ -8,7 +9,7 @@ export {
 } from './runtime-settings-contract.js'
 
 /** Schemastery validator shared by Host configuration and user-settings storage. */
-export const RuntimeSettingsSchema: z<RuntimeSettings> = z.object({
+export const RuntimeSettingsSchema = z.object({
   automaticSuggestionDetection: z.boolean().default(true),
   recentSuggestionSessionLimit: z.number().step(1).min(1).max(64).default(8),
   suggestionTtlMs: z.number().step(1).min(86_400_000).max(7_776_000_000).default(1_209_600_000),
@@ -68,4 +69,12 @@ export const RuntimeSettingsSchema: z<RuntimeSettings> = z.object({
   embeddingMargin: z.number().min(0).max(2).default(0.025),
   equivalenceSimilarityThreshold: z.number().min(0.88).max(1).default(0.88),
   equivalenceMargin: z.number().min(0).max(2).default(0.03),
-})
+}) as z<RuntimeSettings>
+
+/** DSH 0.2 keeps editable Config fields as stable live references. */
+export type RuntimeSettingsConfig = { readonly [K in keyof RuntimeSettings]: Volatile<RuntimeSettings[K]> }
+
+/** Project the same validated fields into the official volatile Config form. */
+export const RuntimeSettingsConfigSchema = z.object(Object.fromEntries(
+  Object.entries(RuntimeSettingsSchema.dict!).map(([key, field]) => [key, (field as z).volatile()]),
+)) as z<RuntimeSettingsConfig>

@@ -1,7 +1,7 @@
 import {
   Button,
-  IconCloseOutline16,
-  IconPanelLeftOutline16,
+  IconCloseOutlineRegular,
+  IconPanelLeftOutlineRegular,
   Pill,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -99,7 +99,7 @@ export function ExperienceShell({
           <Button
             size="sm"
             variant="toolbar"
-            icon={<IconPanelLeftOutline16 />}
+            icon={<IconPanelLeftOutlineRegular />}
             aria-label={inspectorLabel}
             onClick={() => onInspectorOpenChange(true)}
           >{inspectorLabel}</Button>
@@ -134,7 +134,7 @@ export function ExperienceShell({
                 <Button
                   size="sm"
                   variant="toolbar"
-                  icon={<IconCloseOutline16 />}
+                  icon={<IconCloseOutlineRegular />}
                   aria-label={inspectorLabel}
                   onClick={() => onInspectorOpenChange(false)}
                 />

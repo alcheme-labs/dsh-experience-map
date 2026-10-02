@@ -1,6 +1,7 @@
-import { createHash } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import type { SessionEvent, SessionHeader } from '@deepseek-ai/dsh-session'
-import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
+import { SessionId } from '@deepseek-ai/dsh-session'
+import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import type { SessionQueryEngine } from '@deepseek-ai/dsh-session-query'
 import { assertSafeText } from '../application/content-policy.js'
 import { ExperienceError } from '../errors.js'
@@ -29,8 +30,9 @@ export interface SessionTrajectorySlice {
   readonly blockedReason: 'sensitive_content' | null
 }
 
-/** One recent Session read result from an all-or-nothing corpus generation. */
+/** One validated Session observation; incomplete reads are never acknowledged. */
 export interface RecentSessionTrajectoryScan {
+  readonly sourceKey?: string | null
   readonly sessionId: string
   readonly workspaceRoot: string | null
   readonly sessionCreatedAt: string
@@ -40,127 +42,126 @@ export interface RecentSessionTrajectoryScan {
   readonly slices: readonly SessionTrajectorySlice[]
 }
 
-/** Atomic recent-N scan input consumed by the sole Experience projection worker. */
+/** Validated turn slices consumed by the sole Experience projection worker. */
 export interface RecentSessionTrajectoryBatch {
   readonly sourceWatermarkDigest: string
   readonly sessions: readonly RecentSessionTrajectoryScan[]
 }
 
 type SessionSourceQuery = Pick<SessionQueryEngine, 'observeSession'>
-  & Partial<Pick<SessionQueryEngine, 'listSessions' | 'listEvents' | 'readSession' | 'readEvent'>>
 
 /** Read terminal DSH Session events without copying the Session into Experience storage. */
 export class DshSessionSource {
+  /** Source excerpt limits participate in derived-analysis cache invalidation. */
+  get analysisPolicyDigest(): string { return `sha256:${sha256(canonicalJson(this.config))}` }
+
+  private readonly runtimeId = randomUUID()
+  private persistenceIdentity: symbol | undefined
+  private persistenceEpoch = 0
+
+  private sourceKey(source: 'live' | 'prepared', token: string | number | undefined): string | null {
+    if (token === undefined) return null
+    const identity = this.persistence?.()?.identity
+    if (identity !== this.persistenceIdentity) {
+      this.persistenceIdentity = identity
+      this.persistenceEpoch += 1
+    }
+    return JSON.stringify([this.runtimeId, this.persistenceEpoch, source, token])
+  }
+
   /** Bind the reader to the live-preferred Session query owner. */
   constructor(
     private readonly query: SessionSourceQuery,
     private readonly config: SessionSourceConfig,
+    private readonly persistence?: () => SessionPersistence | undefined,
   ) {}
 
   /**
-   * Enumerate recent logical Sessions and rebuild complete turn slices from public Query APIs.
+   * Read only explicitly named Sessions through public Query APIs.
    * Event metadata selects recent work; exact log reads remain the source of slice identity.
    */
   async scanRecentCompletedTurns(
     limit: number,
     ttlMs: number,
     now = new Date(),
-    signal?: AbortSignal,
+    signal: AbortSignal | undefined,
+    sessionIds: readonly string[],
+    completedEndSeqs?: readonly number[],
   ): Promise<RecentSessionTrajectoryBatch> {
     if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(ttlMs) || ttlMs < 1) {
       throw new ExperienceError('invalid_command', 'recent Session limit and TTL must be positive safe integers')
     }
-    const listSessions = this.query.listSessions?.bind(this.query)
-    const listEvents = this.query.listEvents?.bind(this.query)
-    const readSession = this.query.readSession?.bind(this.query)
-    const readEvent = this.query.readEvent?.bind(this.query)
-    if (listSessions === undefined || listEvents === undefined || readSession === undefined || readEvent === undefined) {
-      throw new ExperienceError('source_unresolvable', 'DSH Session Query does not expose recent-session read APIs')
+    if (sessionIds === undefined || sessionIds.length === 0 || sessionIds.some(id => id.trim() === '')) {
+      throw new ExperienceError('invalid_command', 'Explicit Session identities are required; historical discovery is disabled')
     }
     signal?.throwIfAborted()
-    let listed: Awaited<ReturnType<SessionQueryEngine['listSessions']>>
-    try {
-      listed = await listSessions(signal)
-    } catch (error) {
-      signal?.throwIfAborted()
-      throw new ExperienceError('source_unresolvable', 'DSH Session corpus is unavailable', {}, { cause: error })
-    }
-    const activity: Array<{
-      readonly header: SessionHeader
-      readonly lastEventAt: number
-    }> = []
-    for (const record of listed) {
-      signal?.throwIfAborted()
-      try {
-        const events = await listEvents(record.header.id)
-        const last = events.at(-1)
-        activity.push({
-          header: record.header,
-          lastEventAt: last?.time ?? record.header.createdAt,
-        })
-      } catch (error) {
-        signal?.throwIfAborted()
-        throw new ExperienceError(
-          'source_unresolvable',
-          'DSH Session event metadata is unavailable',
-          {},
-          { cause: error },
-        )
-      }
-    }
+    const listed = [...new Set(sessionIds)].map(id => ({ header: { id: SessionId(id) } }))
     const cutoff = now.getTime() - ttlMs
-    const selected = activity
-      .filter(item => item.lastEventAt >= cutoff)
-      .sort((left, right) => right.lastEventAt - left.lastEventAt
-        || right.header.createdAt - left.header.createdAt
-        || String(left.header.id).localeCompare(String(right.header.id)))
-      .slice(0, limit)
+    const selected: Array<{
+      observation: Awaited<ReturnType<SessionQueryEngine['observeSession']>>
+      lastEventAt: number
+    }> = []
     const scans: RecentSessionTrajectoryScan[] = []
-    for (const item of selected) {
-      signal?.throwIfAborted()
-      try {
-        const snapshot = await readSession(item.header.id)
-        if (snapshot.session.id !== item.header.id) throw new Error('Session identity changed during read')
-        const slices = completedTurnSlices(snapshot.session, snapshot.events, this.config, now.toISOString())
-          .filter(slice => Date.parse(slice.episodeRef.occurredAt.end) >= cutoff)
-          .slice(-64)
-        const latestSlice = slices.at(-1)
-        if (latestSlice !== undefined) {
-          const terminal = await readEvent({
-            sessionId: snapshot.session.id,
-            seq: SessionSeq(latestSlice.episodeRef.eventEnd),
-          }, signal)
-          if (terminal.target.type !== 'turn/end' || terminal.target.seq !== latestSlice.episodeRef.eventEnd) {
-            throw new Error('Session terminal boundary changed during read')
-          }
+    try {
+      for (const record of listed) {
+        signal?.throwIfAborted()
+        let observation: Awaited<ReturnType<SessionQueryEngine['observeSession']>> | undefined
+        try {
+          // The public observation owner resolves only this explicitly requested Session.
+          const providerIdentity = this.persistence?.()?.identity
+          observation = await this.query.observeSession(record.header.id, {
+            projectionMode: 'none', ...(signal === undefined ? {} : { signal }),
+          })
+          signal?.throwIfAborted()
+          if (providerIdentity!==this.persistence?.()?.identity) throw new Error('Session provider changed during read')
+          if (observation.header.id !== record.header.id) throw new Error('Session identity changed during read')
+          const lastEventAt = observation.events.at(-1)?.time ?? observation.header.createdAt
+          selected.push({ observation, lastEventAt })
+          observation = undefined // The bounded selection now owns this lease.
+          selected.sort((left, right) => right.lastEventAt - left.lastEventAt
+            || right.observation.header.createdAt - left.observation.header.createdAt
+            || String(left.observation.header.id).localeCompare(String(right.observation.header.id)))
+          if (selected.length > limit) selected.pop()!.observation[Symbol.dispose]()
+        } catch (error) {
+          signal?.throwIfAborted()
+          throw new ExperienceError('source_unresolvable', 'DSH Session event metadata is unavailable', {}, { cause: error })
+        } finally {
+          observation?.[Symbol.dispose]()
         }
-        const last = snapshot.events.at(-1)
+      }
+      for (const { observation } of selected) {
+        signal?.throwIfAborted()
+        const header = observation.header
+        const events = observation.events
+        const completed = completedTurnSlices(header, events, this.config, now.toISOString(), cutoff, completedEndSeqs)
+          .filter(slice => Date.parse(slice.episodeRef.occurredAt.end) >= cutoff)
+        const slices = completedEndSeqs === undefined ? completed.slice(-64) : completed
+        const last = events.at(-1)
         scans.push({
-          sessionId: String(snapshot.session.id),
-          workspaceRoot: snapshot.session.cwd ?? null,
-          sessionCreatedAt: new Date(snapshot.session.createdAt).toISOString(),
+          sessionId: String(header.id),
+          sourceKey: this.sourceKey(observation.source, observation.source === 'live' ? observation.cursor : observation.revision),
+          workspaceRoot: header.cwd ?? null,
+          sessionCreatedAt: new Date(header.createdAt).toISOString(),
           lastEventAt: last === undefined ? null : new Date(last.time).toISOString(),
           capturedThroughSeq: last?.seq ?? null,
           lastCompletedEndSeq: slices.at(-1)?.episodeRef.eventEnd ?? null,
           slices,
         })
-      } catch (error) {
-        signal?.throwIfAborted()
-        throw new ExperienceError(
-          'source_unresolvable',
-          'A recent DSH Session cannot be read atomically',
-          {},
-          { cause: error },
-        )
       }
-    }
-    return {
-      sourceWatermarkDigest: `sha256:${sha256(canonicalJson(scans.map(scan => ({
-        sessionId: scan.sessionId,
-        capturedThroughSeq: scan.capturedThroughSeq,
-        lastCompletedEndSeq: scan.lastCompletedEndSeq,
-      }))))}`,
-      sessions: scans,
+      return {
+        sourceWatermarkDigest: `sha256:${sha256(canonicalJson(scans.map(scan => ({
+          sessionId: scan.sessionId,
+          capturedThroughSeq: scan.capturedThroughSeq,
+          lastCompletedEndSeq: scan.lastCompletedEndSeq,
+        }))))}`,
+        sessions: scans,
+      }
+    } catch (error) {
+      signal?.throwIfAborted()
+      if (error instanceof ExperienceError) throw error
+      throw new ExperienceError('source_unresolvable', 'A recent DSH Session cannot be read atomically', {}, { cause: error })
+    } finally {
+      for (const { observation } of selected) observation[Symbol.dispose]()
     }
   }
 
@@ -297,6 +298,8 @@ function completedTurnSlices(
   events: readonly SessionEvent[],
   limits: SessionSourceConfig,
   observedAt: string,
+  cutoff: number,
+  completedEndSeqs?: readonly number[],
 ): SessionTrajectorySlice[] {
   const slices: SessionTrajectorySlice[] = []
   let startIndex: number | null = null
@@ -309,8 +312,10 @@ function completedTurnSlices(
       continue
     }
     if (event.type !== 'turn/end' || startIndex === null || activeTurn !== event.data.turn) continue
-    const selected = events.slice(startIndex, index + 1)
-    if (event.data.reason.kind === 'completed') {
+    if (event.data.reason.kind === 'completed' && event.time >= cutoff
+      && (completedEndSeqs === undefined || completedEndSeqs.includes(event.seq))) {
+      // Expired cuts cannot contribute to this inbox; do not hash or decode their evidence.
+      const selected = events.slice(startIndex, index + 1)
       const first = selected[0]!
       const contentDigest = `sha256:${sha256(canonicalEventCut(selected))}`
       const episodeRef: EpisodeRefView = {

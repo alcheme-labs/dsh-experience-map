@@ -1,6 +1,6 @@
 # Open-source readiness
 
-Status: **the clean public source snapshot and `v0.1.0-beta.3` are published through both GitHub Releases and the unscoped npm package `dsh-experience-map`; the DSH community listing remains pending.** The private development Git history must never be published.
+Status: **the public baseline is beta.3; beta.4 and beta.5 were published on npm for DSH 0.2.0-rc.2. Beta.6 is the current release candidate awaiting final publication/readback. The DSH community listing remains pending.** The private development Git history must never be published.
 
 ## Release boundary
 
@@ -12,7 +12,7 @@ The current private Git history contains a real Session log and many internal ab
 2. create a new allowlisted directory with `pnpm release:export -- /absolute/path/to/new-directory`;
 3. scan that exported directory and inspect `PUBLIC_EXPORT_MANIFEST.json`;
 4. initialize new Git history only in the exported directory;
-5. create the public remote, push the clean history, enable private security advisories and secret scanning;
+5. for updates, clone the existing public remote and commit only the allowlisted snapshot on its public main history; never merge or push private development ancestry;
 6. build the selected preview tarball once, publish those exact bytes through npm and GitHub Releases, and verify installation in fresh Web and headless Profiles.
 
 Never attach the existing private remote or push the existing private history to the public repository.
@@ -53,6 +53,10 @@ The `v0.1.0-beta.1` tag and Release assets remain immutable. After that Release 
 `0.1.0-beta.2` introduced the public unscoped npm identity, but fresh DSH installation found that its `preinstall` Node guard was rejected by the Profile's strict build-script policy. It remains immutable and is not the supported installation target.
 
 `0.1.0-beta.3` removes every install lifecycle script and enforces the Node 22.19+/24+ requirement when the Host or management CLI module is actually loaded. Its tarball is built once, published unchanged to npm, and attached to the matching GitHub Release. Both channels are checked against the packed artifact before installation guidance is updated.
+
+## Current compatibility and behavior
+
+`0.1.0-beta.4` adapts to DSH `0.2.0-rc.2`; `beta.5` switches to notification-only learning and additive sidecar v7 migration; `beta.6` fixes management label/count wrapping and updates installation guidance. The full removed/changed/preserved behavior is recorded in [CHANGELOG.md](../../CHANGELOG.md). DSH `0.1.5-rc.2` continues to use immutable beta.3; `latest` is not moved by a beta.6 release. Previously saved canonical Experiences remain available. Historical release measurements are retained as dated evidence, not claimed rerun for beta.6.
 
 ## Dependency decision
 

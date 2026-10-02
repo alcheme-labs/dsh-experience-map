@@ -70,13 +70,13 @@ export class PlanningObservationRegistry {
       }
       const shell = this.ctx.get('shell')
       if (shell !== undefined) {
-        const result = await shell.run(shell.resolve({
+        const result = await (await shell.execute(shell.resolve({
           command: 'git status --porcelain=v1 && git rev-parse HEAD',
           workdir: task.workspaceRoot,
           timeoutMs: 5_000,
           stdoutMaxBytes: 65_536,
           ...(signal === undefined ? {} : { signal }),
-        }))
+        }))).result()
         const output = result.stdout.text.trim().split(/\r?\n/u)
         if (result.exitCode === 0 && !result.stdout.truncated) {
           values.revision = output.at(-1) ?? null

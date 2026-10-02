@@ -7,7 +7,7 @@ kind: "package-bundle"
 
 [English](README.md) | 中文
 
-> 当前状态：`0.1.0-beta.3` 公开测试版，已通过无 scope 的 npm 包 `dsh-experience-map` 和内容一致的 GitHub Release tarball 发布。
+> 当前状态：`0.1.0-beta.6` 是本次修复版本，面向 DSH `0.2.0-rc.2`，采用任务完成通知驱动，取消自动历史回扫，并修复管理分类按钮的文字和数量换行；beta.4–beta.6 的删改说明见[变更记录](CHANGELOG.md)；已发布的 `0.1.0-beta.3` 仍面向 DSH `0.1.5-rc.2`。旧制品不修改。
 
 ## 概要
 
@@ -71,7 +71,7 @@ Causal Experience 不会自动被当作已经成立的因果关系。产品会�
 
 ### 自动建议与保存门
 
-Bundle 默认在本地扫描最近已完成的 Session 区间，并按会话列出零到多条有界建议；同一稳定内核跨会话重复出现时只显示一个组和一个保存入口。这个短期投影受最近会话数和 TTL 限制，不是第二个长期经验库，过期且未处理的建议可以直接丢弃。
+Bundle 默认只提取插件运行期间收到完成通知的任务，不在启动或定时检查时回扫历史。老会话继续使用时只提取新完成的任务；插件未运行时完成的任务不会自动补提取。最近会话数从已纳入的会话记录中排序，并按会话列出零到多条有界建议；同一稳定内核跨会话重复出现时只显示一个组和一个保存入口。这个短期投影受最近会话数和 TTL 限制，不是第二个长期经验库，过期且未处理的建议可以直接丢弃。
 
 - 有最终验证证据的 Procedure/Diagnostic、包含明确作用域与例外的用户 Preference 原话，以及来源声明与实际工具调用一致且仍在有效期内的结构化 Fact，才可能显示“保存为经验”。
 - Strategy 保持“需增强/需审阅”；Causal 始终先是 `causal_candidate`，两者都不会由本地规则或模型直接晋升为可一键保存。
@@ -80,7 +80,7 @@ Bundle 默认在本地扫描最近已完成的 Session 区间，并按会话列�
 
 ### 环境要求
 
-- DeepSeek Harness `0.1.5-rc.2`。
+- DeepSeek Harness `0.2.0-rc.2` 对应插件 `0.1.0-beta.6`；DSH `0.1.5-rc.2` 请使用已发布的插件 `0.1.0-beta.3`。
 - Node.js `^22.19.0` 或 `>=24.0.0`。
 - 只有在让模型生成 Candidate 时才需要配置 Harness LLM Provider。
 - 只有明确启用本地稠密检索适配器时，才需要 `@huggingface/transformers`。它不会被自动安装，启用前请先阅读 [SECURITY.md](SECURITY.md)。
@@ -94,32 +94,29 @@ npm 安装包**不包含 Transformers.js 或模型权重，也不会自动下载
 
 向量相似度只参与硬门之后的候选发现和排序，不能单独授权保存、精确合并、Context 注入或工具执行。当前自动稠密适用性与语义等价只校准了 Procedure 和 Diagnostic；其他 Experience 类型仍不会因为一个高向量分就越过确定性门。若要复现发布前的本地语义路径，请按[五分钟上手中的固定版本配置](docs/QUICKSTART.zh.md#5-可选启用经过评测的本地语义召回)安装 `@huggingface/transformers@4.2.0` 和精确 revision 的 `Xenova/multilingual-e5-small`；不要把同一阈值直接套用到未经校准的其他模型。模型缺失、漂移或不可用时，插件会明确降级到词法召回。
 
-### 安装公开测试版
+### 安装兼容版本
 
-把公开 npm 包添加到 Web Profile，然后启动该 Profile：
+在 DSH `0.2.0-rc.2` 中，安装明确指定的 npm 版本：
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 dsh web
 ```
 
-内容一致的预构建 tarball 也可以从不可变的 [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) 下载。
+如果使用 DSH `0.1.5-rc.2`，请安装已发布的 `dsh-experience-map@0.1.0-beta.3`；对应的 [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) 保持不变。本次修复通过 npm `beta` 发布；npm `latest` 仍指向 `beta.3`。
 
-如果从 DSH 源码运行命令，把 `dsh` 换成 `pnpm dsh`。如果希望自行从源码生成同样的包：
+如果从 DSH 源码运行命令，把 `dsh` 换成 `pnpm dsh`。如果尚未克隆本仓库：
 
 ```sh
 git clone https://github.com/alcheme-labs/dsh-experience-map.git
 cd dsh-experience-map
-pnpm install
-pnpm run build
-pnpm pack
 ```
 
 安装完成后先刷新已经打开的 Harness 浏览器标签页，再打开一个会话并选择“经验”标签页。重启 Host 不会替换标签页里已经加载的 JavaScript。这个 Bundle 不会另起一个独立网站。
 
 ### 配置 Experience Map
 
-打开“设置 → 插件 → 插件配置”，然后展开“Experience Map”。卡片提供 28 个可以安全作用于下一次操作、无需重启 Host 的设置。修改先保留在本地草稿中，保存时作为一次带版本条件的原子变更提交；如果发生校验失败或版本冲突，草稿会保留以便修正。每次操作只在入口冻结一份不可变设置快照，因此保存新设置不会改变已经开始的提炼、Plan、验证或学习批次。Candidate 披露会显示本次使用的设置版本和摘要；设置变化后，旧披露确认会自动失效。
+打开“设置 → 插件 → 插件配置”，然后展开“Experience Map”。卡片提供 56 个可以安全作用于下一次操作、无需重启 Host 的设置。修改先保留在本地草稿中，保存时作为一次带版本条件的原子变更提交；如果发生校验失败或版本冲突，草稿会保留以便修正。每次操作只在入口冻结一份不可变设置快照，因此保存新设置不会改变已经开始的提炼、Plan、验证或学习批次。Candidate 披露会显示本次使用的设置版本和摘要；设置变化后，旧披露确认会自动失效。
 
 卡片优先展示默认行为和模型生成，把来源与证据预算、匹配与验证、学习批次放在高级分组中。恢复某个字段会删除用户覆盖值，重新继承 Bundle 组合配置。设置文档不会成为第二个 Experience 领域写入者：Candidate、Version、Plan、Settlement、修订、关系和治理状态仍由 SQLite 独占。
 
@@ -147,7 +144,7 @@ pnpm pack
 Host 插件可以在没有 Browser 服务的环境中加载，因此 CLI/headless Profile 可以正常运行：
 
 ```sh
-pnpm dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
+pnpm dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.6
 pnpm dsh --profile headless "你的任务"
 ```
 
@@ -283,7 +280,7 @@ Bundle 不修改静态系统提示词。Candidate 提议 Session 和 Plan 专用
 <a id="已知限制与延期能力"></a>
 ## 已知限制与延期能力
 
-- npm 使用无 scope 包名 `dsh-experience-map` 发布；受支持的安装命令固定使用经过验证的 `0.1.0-beta.3` 制品。
+- npm 使用无 scope 的 npm 包 `dsh-experience-map`。已发布的 `0.1.0-beta.3` 适配 DSH `0.1.5-rc.2`；本次修复 `0.1.0-beta.6` 适配 DSH `0.2.0-rc.2`。未来 DSH 预览版升级后仍需重新验证插件兼容性。
 - 自动准入默认关闭。六项学习和自动化能力的发布等级都是 `shadow`；评测结果不会自动把它们晋级。
 - SQLite 仍是权威存储，不需要图数据库。召回可以选择固定版本的本地 Transformers.js 向量模型制品；未配置或不可用时继续使用词法回退路径。在当前上游原生依赖安全公告关闭前，Transformers.js 是需要显式安装的可选 peer runtime。
 - 因果记录仍是分等级的候选关系；这个 Bundle 不是通用因果推断引擎。

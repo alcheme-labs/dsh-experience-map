@@ -2464,6 +2464,7 @@ export interface SuggestionProjectionReceiptView {
 
 /** Owner-visible, rebuildable recent-Session suggestion projection. */
 export interface SuggestionProjectionView {
+  readonly history?: { readonly state: 'discovering' | 'running' | 'paused' | 'failed' | 'complete'; readonly total: number; readonly remaining: number }
   readonly projectionKey: 'experience-suggestions-v1'
   readonly schemaVersion: 5
   readonly projectorVersion: string

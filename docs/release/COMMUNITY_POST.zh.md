@@ -6,15 +6,15 @@
 
 > DSH | Experience Map | 让 Agent 复用经过验证的经验，减少重复探索
 
-建议正文：
+建议正文（需完成发布验收后才能对外发送）：
 
 > **非官方社区插件，由社区成员独立开发和维护，不代表 DeepSeek 官方产品、审核或推荐。**
 
-项目地址：[GitHub](https://github.com/alcheme-labs/dsh-experience-map) · [npm](https://www.npmjs.com/package/dsh-experience-map) · [v0.1.0-beta.3 Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3)
+项目地址：[GitHub](https://github.com/alcheme-labs/dsh-experience-map) · [npm](https://www.npmjs.com/package/dsh-experience-map) · [变更记录](https://github.com/alcheme-labs/dsh-experience-map/blob/main/CHANGELOG.md)
 
 Experience Map 是一个面向 DeepSeek Harness 的本地优先经验插件。它要解决的是：同类任务每次执行路线不稳定，Agent 重复尝试已经失败过的步骤，造成额外模型调用、工具调用和 Token 消耗。
 
-它会在任务完成后本地检查最近的 Session，把有证据支撑的 Procedure、Diagnostic、Preference、Fact 等建议按会话列出。用户明确保存后，建议才成为不可变、可版本化的 Experience；相同经验跨会话重复出现时只补充证据，不重复保存内容。新任务召回时还要通过作用域、前置条件、当前 Preflight、阈值和排名间隔检查，不确定就不匹配。
+它只在插件运行期间收到任务完成通知后检查对应 Session，不自动回扫历史会话，把有证据支撑的 Procedure、Diagnostic、Preference、Fact 等建议按会话列出。用户明确保存后，建议才成为不可变、可版本化的 Experience；相同经验跨会话重复出现时只补充证据，不重复保存内容。新任务召回时还要通过作用域、前置条件、当前 Preflight、阈值和排名间隔检查，不确定就不匹配。
 
 与 DSH 的集成方式：
 
@@ -27,7 +27,7 @@ Experience Map 是一个面向 DeepSeek Harness 的本地优先经验插件。�
 快速安装（npm 公开测试版）：
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 dsh web
 ```
 
@@ -37,7 +37,7 @@ dsh web
 
 收益证据：在一组短、配对的真实 DSH 任务中，批准并注入同一条匹配 Experience 后，观测到 provider token volume 降低 65.9%、工具调用减少 45.5%、模型步骤减少 46.2%。这只是一个任务族的 Context 复用观测值，不是召回准确率、平均值或节省承诺；任务、匹配器边界、控制条件、去标识事件、计算方式和非主张均在[收益证据文档](https://github.com/alcheme-labs/dsh-experience-map/blob/main/docs/release/BENEFIT_EVIDENCE.md)中公开。
 
-兼容性：DSH `0.1.5-rc.2`；Node.js `^22.19.0` 或 `>=24.0.0`；MIT License。
+兼容性：插件 `0.1.0-beta.6` 对应 DSH `0.2.0-rc.2`；DSH `0.1.5-rc.2` 使用保持不变的插件 `0.1.0-beta.3`；Node.js `^22.19.0` 或 `>=24.0.0`；MIT License。
 
 维护：杭州星原驱动科技有限公司 · OPC（超级个体）实践。
 
@@ -50,7 +50,7 @@ dsh web
 Experience Map is a local-first experience-memory plugin for DeepSeek Harness. It helps an Agent reuse evidence-backed procedures, diagnostics, preferences, and facts instead of repeating failed exploration on similar tasks.
 
 - Installs as a standard `dsh.bundle` in existing Web or headless Profiles; it does not modify DSH source code.
-- Detects suggestions after completed Sessions and groups repeated evidence without saving duplicate Experiences.
+- Detects suggestions only from task-completion notifications observed while enabled and running; no historical backfill. Repeated evidence is grouped without saving duplicate Experiences.
 - Saving remains an explicit owner decision. Recall is conservative and must pass scope, prerequisite, current-preflight, threshold, and ranking-margin checks.
 - Automatic suggestion detection and recall are enabled by default; Plan approval and tool approval remain separate, and automatic tool execution is disabled.
 - Default detection, grouping, and recall require no external model. Local semantic models and external enrichment are optional and independently configurable.
@@ -58,7 +58,7 @@ Experience Map is a local-first experience-memory plugin for DeepSeek Harness. I
 Install:
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 dsh web
 ```
 

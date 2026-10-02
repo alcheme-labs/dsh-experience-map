@@ -47,6 +47,7 @@ export class ExperienceRetrievalProjection {
 
   /** Capture one immutable settings snapshot and publish dense or explicit lexical fallback atomically. */
   async rebuild(signal?: AbortSignal): Promise<ReturnType<ExperienceProjectionStore['readRetrieval']>> {
+    signal?.throwIfAborted()
     const operation = this.settings()
     const versions = this.repository.listActiveVersionsForProjection(this.actor)
     const documents = versions.map(projectExperienceVersion)
@@ -59,6 +60,7 @@ export class ExperienceRetrievalProjection {
     const embeddingSettingsDigest = suggestionDigest(embeddingSettings(operation))
     const builtAt = new Date().toISOString()
     if (operation.values.embeddingProvider === 'disabled') {
+      signal?.throwIfAborted()
       return this.store.rebuildRetrieval({
         projectionVersion: EXPERIENCE_RETRIEVAL_PROJECTOR_VERSION,
         sourceWatermarkDigest,
@@ -75,6 +77,7 @@ export class ExperienceRetrievalProjection {
     }
     const config = localEmbeddingConfig(operation)
     if (documents.length === 0) {
+      signal?.throwIfAborted()
       return this.store.rebuildRetrieval({
         projectionVersion: EXPERIENCE_RETRIEVAL_PROJECTOR_VERSION,
         sourceWatermarkDigest,
@@ -105,6 +108,7 @@ export class ExperienceRetrievalProjection {
         }
         vectors.push(...result.vectors)
       }
+      signal?.throwIfAborted()
       return this.store.rebuildRetrieval({
         projectionVersion: EXPERIENCE_RETRIEVAL_PROJECTOR_VERSION,
         sourceWatermarkDigest,
@@ -119,7 +123,9 @@ export class ExperienceRetrievalProjection {
         builtAt,
       })
     } catch (error) {
+      signal?.throwIfAborted()
       const failureCode = embeddingFailureCode(error)
+      signal?.throwIfAborted()
       return this.store.rebuildRetrieval({
         projectionVersion: EXPERIENCE_RETRIEVAL_PROJECTOR_VERSION,
         sourceWatermarkDigest,

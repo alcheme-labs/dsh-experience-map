@@ -68,7 +68,7 @@ export class WebUsageVerifier {
     const target = jobId === null ? null : runtime?.targetUrlsByJobId.get(jobId) ?? null
     const jobs = this.ctx.get('jobs')
     const job = runtime === null || jobId === null || jobs === undefined
-      ? null : safeJob(() => jobs.get(JobId(jobId), runtime.agent))
+      ? null : safeJob(() => jobs.get(JobId(jobId), runtime.agent.session.id))
     const port = target === null ? null : numericPort(target)
     const listener = port === null
       ? { state: 'unknown', pid: null, host: null, port: 0, reasonCode: 'readiness_url_absent', sourceRef: null } as const
@@ -301,12 +301,12 @@ export class WebUsageVerifier {
     const shell = this.ctx.get('shell')
     if (shell === undefined) return null
     try {
-      const result = await shell.run(shell.resolve({
+      const result = await (await shell.execute(shell.resolve({
         command: 'lsof -nP -iTCP -sTCP:LISTEN -Fpc',
         timeoutMs: Math.min(timeoutMs, 5_000),
         stdoutMaxBytes: 65_536,
         ...(signal === undefined ? {} : { signal }),
-      }))
+      }))).result()
       const complete = !result.stdout.truncated && !result.stderr.truncated
       if (result.exitCode === 1 && complete
         && result.stdout.text.trim() === '' && result.stderr.text.trim() === '') return new Set()
@@ -333,12 +333,12 @@ export class WebUsageVerifier {
       reasonCode: 'shell_provider_unavailable', sourceRef: null }
     const command = `lsof -nP -iTCP:${String(port)} -sTCP:LISTEN -Fpnc`
     try {
-      const result = await shell.run(shell.resolve({
+      const result = await (await shell.execute(shell.resolve({
         command,
         timeoutMs: Math.min(timeoutMs, 5_000),
         stdoutMaxBytes: 16_384,
         ...(signal === undefined ? {} : { signal }),
-      }))
+      }))).result()
       const sourceRef = `external-authority://process-socket/tcp/${String(port)}/${digest({
         exitCode: result.exitCode,
         stdout: result.stdout.text,
@@ -422,7 +422,7 @@ function httpRef(origin: string, path: string): string {
   return `external-authority://${new URL(origin).host}/${path}`
 }
 
-function safeJob(read: () => import('@deepseek-ai/dsh-jobs').JobSnapshot): import('@deepseek-ai/dsh-jobs').JobSnapshot | null {
+function safeJob(read: () => import('@deepseek-ai/dsh-jobs').JobView): import('@deepseek-ai/dsh-jobs').JobView | null {
   try { return read() } catch { return null }
 }
 

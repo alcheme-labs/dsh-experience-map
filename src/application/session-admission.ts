@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import type { GenerateOptions, Message, UserMessage } from '@deepseek-ai/dsh-llm'
+import type { GenerateOptions, Message, RequestMessage, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import { parseExitStatus } from '@deepseek-ai/dsh-shell'
 import {
@@ -370,6 +370,7 @@ export class SessionAdmission {
     next: () => AsyncIterable<import('@deepseek-ai/dsh-llm').StreamChunk>,
   ): AsyncIterable<import('@deepseek-ai/dsh-llm').StreamChunk> {
     const experienceMessages = options.messages.flatMap(message => {
+      if (!isDurableMessage(message)) return []
       const source = experienceMessageSource(message)
       return source?.lifecycle === 'active' ? [{ message, source }] : []
     })
@@ -661,4 +662,9 @@ function messageContentDigest(message: Message): string {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+/** Request-only user inputs have no durable identity and cannot prove Context delivery. */
+function isDurableMessage(message: RequestMessage): message is Message {
+  return message.id !== undefined && message.source !== undefined
 }

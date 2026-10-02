@@ -131,7 +131,7 @@ function fakeContext(
   })
   const shell = {
     resolve: (value: unknown) => value,
-    run: async (spec: { command: string }) => {
+    execute: async (spec: { command: string }) => ({ result: async () => {
       if (spec.command.includes(`-iTCP:${String(port)}`)) {
         if (listenerReadbackFails()) return output(127, '', 'lsof unavailable')
         return isRunning()
@@ -141,7 +141,7 @@ function fakeContext(
       return output(0, isRunning()
         ? `p900001\ncunrelated\np${String(process.pid)}\ncnode\n`
         : 'p900001\ncunrelated\n')
-    },
+    } }),
   }
   return {
     sessionQuery: {

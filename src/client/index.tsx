@@ -8,7 +8,7 @@ import { registerExperienceSettings } from './settings-card.js'
 import { registerExperienceWorkspace } from './workspace.js'
 
 /** Required Browser services: authenticated Connection, locale, and existing Session view slots. */
-export const inject = ['connection', 'locale', 'slots', 'settingsScope', 'settingsSchema']
+export const inject = ['connection', 'locale', 'slots', 'configForms', 'settingsSchema']
 
 /** Register the in-Harness Experience tab and authoritative status controller. */
 export function apply(ctx: Context): void {

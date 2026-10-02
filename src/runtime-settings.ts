@@ -1,10 +1,12 @@
 import type { Context } from '@deepseek-ai/cordis'
-import type { SettingsProvider } from '@deepseek-ai/dsh-settings'
+import type { SettingsForms } from '@deepseek-ai/dsh-settings'
 import { digest } from './domain/planning.js'
 import type { AutomationConfigurationView } from './types.js'
 import {
   RuntimeSettingsSchema,
+  RUNTIME_SETTINGS_KEYS,
   type RuntimeSettings,
+  type RuntimeSettingsConfig,
   validateRuntimeSettings,
 } from './runtime-settings-schema.js'
 
@@ -18,25 +20,20 @@ export interface RuntimeSettingsSnapshot {
 /** Optional user-settings adapter with a composition-config fallback. */
 export class RuntimeSettingsSource {
   private current: () => RuntimeSettings
-  private provider: SettingsProvider | undefined
+  private provider: SettingsForms | undefined
 
   /** Register the live namespace whenever a settings provider is present. */
-  constructor(ctx: Context, entry: RuntimeSettings) {
-    const base = parseRuntimeSettings(entry)
-    this.current = () => base
+  constructor(ctx: Context, entry: RuntimeSettingsConfig) {
+    this.current = () => parseRuntimeSettings(Object.fromEntries(
+      RUNTIME_SETTINGS_KEYS.map(key => [key, entry[key].get()]),
+    ) as unknown as RuntimeSettings)
+    this.current()
     ctx.inject(['settings'], settingsCtx => {
       const provider = settingsCtx.settings
-      const scope = provider.register('experience-map', RuntimeSettingsSchema, {
-        applies: 'live',
-        base,
-        validate: validateRuntimeSettings,
-      })
-      this.current = () => scope.get()
       this.provider = provider
       settingsCtx.effect(() => () => {
         if (this.provider !== provider) return
         this.provider = undefined
-        this.current = () => base
       }, 'experience-map runtime settings provider ownership')
     })
   }

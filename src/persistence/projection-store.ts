@@ -27,7 +27,7 @@ import type {
 
 /** Separate application id for the disposable projection sidecar (“EXPS”). */
 export const SUGGESTION_PROJECTION_APPLICATION_ID = 0x45585053
-export const SUGGESTION_PROJECTION_STORAGE_SCHEMA_VERSION = 5
+export const SUGGESTION_PROJECTION_STORAGE_SCHEMA_VERSION = 7
 export const SUGGESTION_PROJECTION_VIEW_SCHEMA_VERSION = 5
 /** Backward-compatible name for the physical SQLite schema owner. */
 export const SUGGESTION_PROJECTION_SCHEMA_VERSION = SUGGESTION_PROJECTION_STORAGE_SCHEMA_VERSION
@@ -35,6 +35,8 @@ export const SUGGESTION_PROJECTION_KEY = 'experience-suggestions-v1' as const
 export const EXPERIENCE_RETRIEVAL_PROJECTION_KEY = 'experience-retrieval-v1' as const
 
 const TABLES = [
+  'suggestion_history',
+  'suggestion_session_progress',
   'projection_generations',
   'projection_metadata',
   'projection_receipts',
@@ -49,7 +51,29 @@ const TABLES = [
 
 class ProjectionStoreInvalidError extends Error {}
 
-const SCHEMA = `
+const PROGRESS_SCHEMA = `
+  CREATE TABLE suggestion_history (
+    singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+    discovered INTEGER NOT NULL CHECK (discovered IN (0,1)),
+    catalogue_failed INTEGER NOT NULL CHECK (catalogue_failed IN (0,1)),
+    paused INTEGER NOT NULL CHECK (paused IN (0,1))
+  ) STRICT;
+  INSERT INTO suggestion_history VALUES (1,0,0,0);
+  CREATE TABLE suggestion_session_progress (
+    session_id TEXT PRIMARY KEY,
+    source_key TEXT,
+    pending INTEGER NOT NULL CHECK (pending IN (0,1)),
+    urgent INTEGER NOT NULL CHECK (urgent IN (0,1)),
+    request_seq INTEGER NOT NULL,
+    request_version INTEGER NOT NULL,
+    completed_end_seqs_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(completed_end_seqs_json)),
+    retry_at INTEGER NOT NULL,
+    build_key TEXT,
+    payload_json TEXT CHECK (payload_json IS NULL OR json_valid(payload_json))
+  ) STRICT;
+`
+
+const SCHEMA = `${PROGRESS_SCHEMA}
   CREATE TABLE projection_metadata (
     singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
     active_generation INTEGER NOT NULL CHECK (active_generation >= 0),
@@ -145,6 +169,30 @@ const SCHEMA = `
   ) STRICT;
 `
 
+/** Derived analysis only; raw Session events remain exclusively in DSH. */
+export interface SuggestionSessionAnalysis {
+  readonly scan: SessionSuggestionScanView
+  readonly seeds: readonly ExperienceSuggestionSeedView[]
+  readonly turnDigests: readonly string[]
+  readonly blockedTurnDigests?: readonly string[]
+}
+export interface SuggestionSessionJob {
+  readonly sessionId: string
+  readonly sourceKey: string | null
+  readonly urgent: boolean
+  readonly requestSeq: number
+  readonly requestVersion: number
+  readonly completedEndSeqs: readonly number[]
+  readonly buildKey: string | null
+  readonly analysis: SuggestionSessionAnalysis | null
+}
+export interface SuggestionSessionCommit {
+  readonly job: SuggestionSessionJob
+  readonly sourceKey: string | null
+  readonly buildKey: string
+  readonly analysis: SuggestionSessionAnalysis
+}
+
 /** Atomic input produced by one recent-Session reconciliation. */
 export interface SuggestionProjectionBuild {
   readonly projectorVersion: string
@@ -154,6 +202,9 @@ export interface SuggestionProjectionBuild {
   readonly groups: readonly ExperienceSuggestionGroupView[]
   readonly startedAt: string
   readonly completedAt: string
+  readonly sessionCommit?: SuggestionSessionCommit
+  /** Current live policy boundary applies even before cached Sessions are reread. */
+  readonly retentionCutoffAt?: string
 }
 
 /** Complete lexical/dense snapshot prepared outside the sidecar transaction. */
@@ -218,6 +269,64 @@ export class ExperienceProjectionStore {
     }
   }
 
+  /** A real notification queues an exact Session; concurrent wakes cannot be cleared by an older read. */
+  requestSession(sessionId: string, seq: number): void {
+    this.assertOpen()
+    if (sessionId.trim()==='' || sessionId==='undefined' || !Number.isSafeInteger(seq) || seq < 0) {
+      throw new ExperienceError('invalid_command','Invalid Session notification identity')
+    }
+    transaction(this.handle, () => {
+      const previous = this.handle.prepare('SELECT completed_end_seqs_json FROM suggestion_session_progress WHERE session_id=?').get(sessionId) as {completed_end_seqs_json:string}|undefined
+      const ends = previous === undefined ? [] : parseCompletedEndSeqs(previous.completed_end_seqs_json)
+      if (!ends.includes(seq)) ends.push(seq)
+      this.handle.prepare(`INSERT INTO suggestion_session_progress
+        (session_id,source_key,pending,urgent,request_seq,request_version,retry_at,completed_end_seqs_json) VALUES (?,NULL,1,1,?,1,0,?)
+        ON CONFLICT(session_id) DO UPDATE SET pending=1,urgent=1,
+          request_seq=MAX(request_seq,excluded.request_seq),request_version=request_version+1,retry_at=0,
+          completed_end_seqs_json=excluded.completed_end_seqs_json`).run(sessionId,seq,JSON.stringify(ends))
+    })
+  }
+
+  /** Stop obsolete historical scheduling without deleting any derived result or observed request. */
+  prepareObservedTaskLearning(): void {
+    this.assertOpen()
+    transaction(this.handle, () => {
+      this.handle.prepare('UPDATE suggestion_session_progress SET pending=0,retry_at=0 WHERE urgent=0').run()
+      this.handle.prepare('UPDATE suggestion_history SET discovered=1,catalogue_failed=0,paused=0 WHERE singleton=1').run()
+    })
+  }
+
+  hasFailedSessionJobs(): boolean {
+    this.assertOpen()
+    return this.handle.prepare('SELECT session_id FROM suggestion_session_progress WHERE pending=1 AND retry_at>0 LIMIT 1').get() !== undefined
+  }
+
+  nextSessionJob(now: number, foregroundOnly = false): SuggestionSessionJob | undefined {
+    this.assertOpen()
+    const row = this.handle.prepare(`SELECT * FROM suggestion_session_progress WHERE pending=1 AND retry_at<=?
+      ${foregroundOnly ? 'AND urgent=1 AND retry_at=0' : ''} ORDER BY (urgent=1 AND retry_at=0) DESC, payload_json IS NOT NULL, rowid LIMIT 1`).get(now) as {
+      session_id:string; source_key:string|null; urgent:number; request_seq:number; request_version:number; retry_at:number;
+      build_key:string|null; payload_json:string|null; completed_end_seqs_json:string
+    } | undefined
+    return row === undefined ? undefined : {
+      sessionId:row.session_id,sourceKey:row.source_key,urgent:row.urgent===1 && row.retry_at===0,requestSeq:row.request_seq,
+      requestVersion:row.request_version,completedEndSeqs:parseCompletedEndSeqs(row.completed_end_seqs_json),buildKey:row.build_key,
+      analysis:row.payload_json===null ? null : parseAnalysis(row.payload_json),
+    }
+  }
+
+  retrySessionJob(job: SuggestionSessionJob, now: number): void {
+    this.assertOpen()
+    this.handle.prepare('UPDATE suggestion_session_progress SET retry_at=? WHERE session_id=? AND request_version=?')
+      .run(now+30_000,job.sessionId,job.requestVersion)
+  }
+
+  readSessionAnalyses(): SuggestionSessionAnalysis[] {
+    this.assertOpen()
+    return (this.handle.prepare('SELECT payload_json FROM suggestion_session_progress WHERE payload_json IS NOT NULL').all() as Array<{payload_json:string}>)
+      .map(row=>parseAnalysis(row.payload_json))
+  }
+
   /** Atomically activate a complete generation, or record an idempotent unchanged scan. */
   rebuild(input: SuggestionProjectionBuild): SuggestionProjectionView {
     this.assertOpen()
@@ -243,6 +352,29 @@ export class ExperienceProjectionStore {
       groups: groups.map(stableProjectionContent),
     })
     transaction(this.handle, () => {
+      if (input.sessionCommit !== undefined) {
+        const {job,analysis,buildKey,sourceKey} = input.sessionCommit
+        parseAnalysis(JSON.stringify(analysis))
+        const caughtUp = (analysis.scan.capturedThroughSeq ?? -1) >= job.requestSeq
+        this.handle.prepare(`UPDATE suggestion_session_progress SET payload_json=?,build_key=?,source_key=?,
+          completed_end_seqs_json=CASE WHEN request_version=? AND ? THEN '[]' ELSE completed_end_seqs_json END,
+          pending=CASE WHEN request_version=? AND ? THEN 0 ELSE 1 END,
+          urgent=CASE WHEN request_version=? AND ? THEN 0 ELSE urgent END,
+          retry_at=CASE WHEN request_version=? AND NOT ? THEN ? ELSE 0 END WHERE session_id=?`)
+          .run(JSON.stringify(analysis),buildKey,sourceKey,job.requestVersion,Number(caughtUp),job.requestVersion,Number(caughtUp),job.requestVersion,Number(caughtUp),
+            job.requestVersion,Number(caughtUp),completedMs+30_000,job.sessionId)
+      }
+      // Cached analysis obeys the same TTL as the published inbox; only opaque turn digests remain.
+      const withinRetention = `julianday(json_extract(value,'$.expiresAt'))>julianday(?)
+        AND (? IS NULL OR julianday(json_extract(value,'$.detectedAt'))>julianday(?))`
+      const retentionArgs = [input.completedAt,input.retentionCutoffAt ?? null,input.retentionCutoffAt ?? null] as const
+      this.handle.prepare(`UPDATE suggestion_session_progress SET payload_json=json_set(payload_json,
+        '$.seeds',json(COALESCE((SELECT json_group_array(json(value)) FROM json_each(payload_json,'$.seeds')
+          WHERE ${withinRetention}), '[]')),
+        '$.scan.occurrenceIds',json(COALESCE((SELECT json_group_array(json_extract(value,'$.occurrenceId'))
+          FROM json_each(payload_json,'$.seeds') WHERE ${withinRetention}), '[]')))
+        WHERE payload_json IS NOT NULL AND EXISTS (SELECT 1 FROM json_each(payload_json,'$.seeds')
+          WHERE NOT (${withinRetention}))`).run(...retentionArgs,...retentionArgs,...retentionArgs)
       this.handle.prepare('DELETE FROM suggestion_dispositions WHERE expires_at <= ?').run(input.completedAt)
       const current = this.currentGeneration()
       const unchanged = current.projectorVersion === input.projectorVersion
@@ -629,6 +761,16 @@ export class ExperienceProjectionStore {
     return this.read()
   }
 
+  private historyProgress(): NonNullable<SuggestionProjectionView['history']> {
+    const meta = this.handle.prepare('SELECT * FROM suggestion_history WHERE singleton=1').get() as {discovered:number;catalogue_failed:number;paused:number}
+    const counts = this.handle.prepare(`SELECT count(*) total,
+      COALESCE(sum(pending),0) pending,COALESCE(sum(CASE WHEN pending=1 AND retry_at>0 THEN 1 ELSE 0 END),0) failed
+      FROM suggestion_session_progress`).get() as {total:number;pending:number;failed:number}
+    return {state: meta.catalogue_failed || counts.failed ? 'failed' : !meta.discovered ? 'discovering'
+      : counts.pending ? (meta.paused ? 'paused' : 'running') : 'complete',
+      total:counts.total,remaining:counts.pending}
+  }
+
   /** Read only the active generation; an unfinished or failed rebuild is never visible. */
   read(): SuggestionProjectionView {
     this.assertOpen()
@@ -671,6 +813,7 @@ export class ExperienceProjectionStore {
         dispositions,
         suppressedGroupCount: activeGroups.length - groups.length,
         latestReceipt: receiptView(latest),
+        history: this.historyProgress(),
       }
     })
   }
@@ -919,12 +1062,30 @@ async function openStore(
     if (applicationId === 0 && tables.length === 0) bootstrap(handle, recovered)
     else {
       if (applicationId !== SUGGESTION_PROJECTION_APPLICATION_ID
-        || (version !== 4 && version !== SUGGESTION_PROJECTION_SCHEMA_VERSION)) {
+        || (version !== 4 && version !== 5 && version !== 6 && version !== SUGGESTION_PROJECTION_SCHEMA_VERSION)) {
         throw new ProjectionStoreInvalidError('unrecognized suggestion projection schema')
       }
       if (version === 4) upgradeSuggestionDispositionSchemaV5(handle)
+      if (version === 4 || version === 5) transaction(handle, () => {
+        handle.exec(PROGRESS_SCHEMA)
+        // Preserve published derived results without queuing historical reads.
+        const generation = (handle.prepare('SELECT active_generation FROM projection_metadata WHERE singleton=1').get() as {active_generation:number}).active_generation
+        for (const row of handle.prepare('SELECT session_id,payload_json FROM session_scans WHERE generation=?').all(generation) as Array<{session_id:string;payload_json:string}>) {
+          const seeds = (handle.prepare('SELECT payload_json FROM suggestion_seeds WHERE generation=? AND session_id=?').all(generation,row.session_id) as Array<{payload_json:string}>).map(row=>parseSeed(row.payload_json))
+          handle.prepare(`INSERT INTO suggestion_session_progress
+            (session_id,source_key,pending,urgent,request_seq,request_version,retry_at,payload_json) VALUES (?,NULL,0,0,-1,0,0,?)`)
+            .run(row.session_id,JSON.stringify({scan:parseSession(row.payload_json),seeds,turnDigests:[]}))
+        }
+        handle.exec('PRAGMA user_version=7')
+      })
+      if (version === 6) transaction(handle, () => {
+        handle.exec(`ALTER TABLE suggestion_session_progress ADD COLUMN completed_end_seqs_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(completed_end_seqs_json));
+          UPDATE suggestion_session_progress SET completed_end_seqs_json=json_array(request_seq) WHERE pending=1 AND urgent=1 AND request_seq>=0;
+          UPDATE suggestion_session_progress SET pending=0,retry_at=0 WHERE urgent=0;
+          PRAGMA user_version=7;`)
+      })
       upgradeLegacyRetrievalProjection(handle)
-      assertStore(handle, tables)
+      assertStore(handle, listTables(handle))
     }
     return create(handle)
   } catch (error) {
@@ -957,7 +1118,7 @@ function upgradeSuggestionDispositionSchemaV5(handle: DatabaseSync): void {
       DROP TABLE suggestion_dispositions_v4;
     `)
     backfillSemanticDispositionSources(handle)
-    handle.exec(`PRAGMA user_version = ${String(SUGGESTION_PROJECTION_STORAGE_SCHEMA_VERSION)}`)
+    handle.exec('PRAGMA user_version = 5')
   })
 }
 
@@ -1208,6 +1369,15 @@ function assertStore(handle: DatabaseSync, tables: readonly string[]): void {
        AND name NOT GLOB 'sqlite_*' AND strict <> 1`,
   ).all()
   if (nonStrict.length > 0) throw new ProjectionStoreInvalidError('suggestion projection tables must be STRICT')
+  for (const row of handle.prepare('SELECT completed_end_seqs_json FROM suggestion_session_progress').all() as Array<{completed_end_seqs_json:string}>) {
+    parseCompletedEndSeqs(row.completed_end_seqs_json)
+  }
+  for (const row of handle.prepare('SELECT payload_json FROM suggestion_session_progress WHERE payload_json IS NOT NULL').all() as Array<{payload_json:string}>) {
+    try { parseAnalysis(row.payload_json) } catch(error) { throw new ProjectionStoreInvalidError('invalid Session analysis cache',{cause:error}) }
+  }
+  if (handle.prepare('SELECT singleton FROM suggestion_history WHERE singleton=1').get()===undefined) {
+    throw new ProjectionStoreInvalidError('missing historical progress metadata')
+  }
   const metadata = handle.prepare(
     'SELECT active_generation FROM projection_metadata WHERE singleton = 1',
   ).get() as { active_generation: number } | undefined
@@ -1419,7 +1589,9 @@ function validateBuild(input: SuggestionProjectionBuild): void {
   if (input.projectorVersion.trim() === '' || !/^sha256:[a-f0-9]{64}$/u.test(input.sourceWatermarkDigest)) {
     throw new ExperienceError('invalid_command', 'suggestion projection build identity is invalid')
   }
-  if (!Number.isFinite(Date.parse(input.startedAt)) || !Number.isFinite(Date.parse(input.completedAt))) {
+  if (!Number.isFinite(Date.parse(input.startedAt)) || !Number.isFinite(Date.parse(input.completedAt))
+    || (input.retentionCutoffAt !== undefined && (!Number.isFinite(Date.parse(input.retentionCutoffAt))
+      || Date.parse(input.retentionCutoffAt)>Date.parse(input.completedAt)))) {
     throw new ExperienceError('invalid_command', 'suggestion projection build timestamps are invalid')
   }
 }
@@ -1763,4 +1935,24 @@ function isRecoverableProjectionCorruption(error: unknown): boolean {
 /** Derive the one sidecar path without changing the canonical database schema. */
 export function suggestionProjectionPath(databasePath: string): string {
   return databasePath === ':memory:' ? ':memory:' : `${resolve(databasePath)}.projection.sqlite`
+}
+
+function parseAnalysis(json: string): SuggestionSessionAnalysis {
+  const value = JSON.parse(json) as SuggestionSessionAnalysis
+  if (!Array.isArray(value.seeds) || !Array.isArray(value.turnDigests) || !value.turnDigests.every(digest=>isSha256(digest))) throw new Error('invalid Session analysis')
+  const scan = parseSession(JSON.stringify(value.scan))
+  const seeds = value.seeds.map(seed=>parseSeed(JSON.stringify(seed)))
+  if (seeds.some(seed=>seed.sessionId!==scan.sessionId)) throw new Error('Session cache identity mismatch')
+  if (value.blockedTurnDigests!==undefined && (!Array.isArray(value.blockedTurnDigests)
+    || !value.blockedTurnDigests.every(digest=>isSha256(digest)))) throw new Error('invalid blocked turn cache')
+  return {scan,seeds,turnDigests:value.turnDigests,...value.blockedTurnDigests===undefined ? {} : {blockedTurnDigests:value.blockedTurnDigests}}
+}
+
+/** Validated durable notification cuts; no Session body or private provider token is stored here. */
+function parseCompletedEndSeqs(raw: string): number[] {
+  const value: unknown = JSON.parse(raw)
+  if (!Array.isArray(value) || value.some(seq => !Number.isSafeInteger(seq) || seq < 0)) {
+    throw new ProjectionStoreInvalidError('invalid completed task notification cuts')
+  }
+  return [...new Set(value as number[])]
 }

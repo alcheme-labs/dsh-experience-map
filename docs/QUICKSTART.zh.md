@@ -1,13 +1,13 @@
 # Experience Map 五分钟上手
 
-Experience Map 会在 DeepSeek Harness（DSH）完成任务后，本地检查最近的 Session，按会话列出值得保存的经验建议；用户明确保存后，它才会成为可召回的 Experience。相同经验只对应一个 Experience Series，重复出现会补充证据，不会重复保存一份内容。
+Experience Map 仅在启用且运行期间收到 DeepSeek Harness（DSH）的任务完成通知后，本地检查对应任务，按会话列出值得保存的经验建议；用户明确保存后，它才会成为可召回的 Experience。相同经验只对应一个 Experience Series，重复出现会补充证据，不会重复保存一份内容。
 
 ## 1. 安装
 
-从 npm 安装无 scope 的 `0.1.0-beta.3` 包，安装时不需要在本机执行仓库里的构建脚本：
+DSH `0.2.0-rc.2` 安装明确指定的 npm 发布版本：
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 ```
 
 然后启动 Web Profile：
@@ -16,7 +16,7 @@ dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
 dsh web
 ```
 
-如果从 DSH 源码运行命令，把上面的 `dsh` 换成 `pnpm dsh`。如果希望自行构建，请克隆本仓库并运行 `pnpm install && pnpm run build && pnpm pack`。本预发布版本要求 DSH `0.1.5-rc.2`，Node.js `^22.19.0` 或 `>=24.0.0`。
+如果从 DSH 源码运行命令，把上面的 `dsh` 换成 `pnpm dsh`。如果希望自行构建，请克隆本仓库并运行 `pnpm install && pnpm run build && pnpm pack`。本版本要求 DSH `0.2.0-rc.2`，Node.js `^22.19.0` 或 `>=24.0.0`。
 
 ## 2. 收集第一条建议
 
@@ -25,7 +25,7 @@ dsh web
 3. 查看“最近会话”中的建议。界面会直接显示建议类型、保存条件和证据状态；用户不需要先选择六种 Experience 类型。
 4. 对 `可保存` 的建议点击“保存为经验”。`需完善` 或 `需审阅` 不会被悄悄保存。
 
-安装后不需要先打开设置：`automaticSuggestionDetection` 默认开启，只检查最近 8 个 Session，未处理建议 14 天后可以被丢弃。完整 Session 仍保留在 DSH 本地；自动检测、分组和默认召回不会调用外部模型。
+安装后不需要先打开设置：`automaticSuggestionDetection` 默认开启，只学习启用且运行期间收到完成通知的任务；启动和定时维护不会发现或回扫历史会话。“最近 8 个”指已收到通知并纳入记录的会话，不是全库最新 8 个。老会话继续使用时只学习新任务，停用期间完成的任务不补提取；原来已保存的经验仍可使用。未处理建议 14 天后可以被丢弃。beta.4–beta.6 的删改说明见[变更记录](../CHANGELOG.md)。完整 Session 仍保留在 DSH 本地；自动检测、分组和默认召回不会调用外部模型。
 
 ## 3. 在相似任务中复用
 
@@ -42,7 +42,7 @@ dsh web
 
 | 设置 | 默认值 | 含义 |
 | --- | --- | --- |
-| 自动检测建议 | 开启 | 从最近完成的 Session 生成可丢弃建议。 |
+| 自动检测建议 | 开启 | 从运行期间收到完成通知的任务生成建议，不回扫历史。 |
 | 自动召回 | 开启 | 对新任务进行保守匹配，允许不匹配。 |
 | Context 注入 | Plan 获批后 | 未批准不注入。 |
 | 自动工具执行 | 关闭 | Experience Map 不替用户授权工具。 |
@@ -62,7 +62,7 @@ dsh web
 Web Profile 可以一次安装插件和可选 peer runtime：
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3 @huggingface/transformers@4.2.0
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6 @huggingface/transformers@4.2.0
 ```
 
 如果还要在 `headless` 或 `experience-management` Profile 中运行语义召回，也要把 `@huggingface/transformers@4.2.0` 加到对应 Profile。DSH 可能提示 Transformers.js 不是 DSH Bundle；这是预期提示，它仍作为该 Profile 的普通依赖保留。启用前请阅读[安全说明](../SECURITY.md)。
@@ -129,14 +129,14 @@ f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193
 安装到 headless Profile 后，Session 建议检测和 Experience 召回同样默认开启：
 
 ```sh
-dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.6
 dsh --profile headless "检查当前项目的测试并修复同类失败"
 ```
 
 终端没有“点击保存”操作，因此保存、忽略和 Plan 批准仍通过显式管理命令完成。先创建独立管理 Profile：
 
 ```sh
-dsh plugin --profile experience-management add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile experience-management add dsh-experience-map@0.1.0-beta.6
 ```
 
 把下面两行追加到 `$DSH_HOME/profiles/experience-management/cordis.patch.yml`；不要覆盖其中已有的用户配置：

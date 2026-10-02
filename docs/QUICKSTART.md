@@ -1,13 +1,13 @@
 # Experience Map five-minute quickstart
 
-Experience Map locally inspects recently completed DeepSeek Harness (DSH) Sessions and lists evidence-backed suggestions by Session. Nothing becomes durable Experience memory until the user explicitly saves it. Repeated evidence for the same stable kernel targets one Experience Series instead of creating duplicate content.
+Experience Map locally inspects tasks whose completion notifications it observes while running in DeepSeek Harness (DSH) and lists evidence-backed suggestions by Session. Nothing becomes durable Experience memory until the user explicitly saves it. Repeated evidence for the same stable kernel targets one Experience Series instead of creating duplicate content.
 
 ## 1. Install
 
-Install the unscoped `0.1.0-beta.3` package from npm; installation does not execute repository build scripts on your machine:
+For DSH `0.2.0-rc.2`, install the exact npm version:
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 ```
 
 Then start the Web profile:
@@ -16,7 +16,7 @@ Then start the Web profile:
 dsh web
 ```
 
-When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To build the package yourself, clone this repository and run `pnpm install && pnpm run build && pnpm pack`. This pre-release targets DSH `0.1.5-rc.2` and Node.js `^22.19.0` or `>=24.0.0`.
+When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To build the package yourself, clone this repository and run `pnpm install && pnpm run build && pnpm pack`. This version targets DSH `0.2.0-rc.2` and Node.js `^22.19.0` or `>=24.0.0`.
 
 ## 2. Collect the first suggestion
 
@@ -25,7 +25,7 @@ When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To bui
 3. Inspect suggestions under the recent Session. The UI explains type, save readiness, and evidence; the user does not classify six Experience kinds first.
 4. Choose `Save as experience` only for a `ready` suggestion. `Needs enrichment` and `needs review` are not silently saved.
 
-No settings change is required first. `automaticSuggestionDetection` is enabled by default, examines the most recent eight Sessions, and may discard unattended suggestions after 14 days. Complete Sessions remain local to DSH. Automatic detection, grouping, and default recall do not call an external model.
+No settings change is required first. `automaticSuggestionDetection` is enabled by default. It learns only completed tasks notified while enabled and running; startup and periodic maintenance do not discover historical Sessions. The recent list defaults to eight already observed Sessions, and unattended suggestions may expire after 14 days. Reused old Sessions contribute new tasks only; tasks completed while inactive are not backfilled. Previously saved Experiences remain available. See [the changelog](../CHANGELOG.md) for changes from beta.4 and beta.5. Complete Sessions remain local to DSH. Automatic detection, grouping, and default recall do not call an external model.
 
 ## 3. Reuse it in a similar task
 
@@ -40,7 +40,7 @@ No settings change is required first. `automaticSuggestionDetection` is enabled 
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| Automatic suggestion detection | Enabled | Derive disposable suggestions from recent completed Sessions. |
+| Automatic suggestion detection | Enabled | Derive disposable suggestions from observed task-completion notifications; no historical backfill. |
 | Automatic recall | Enabled | Match conservatively and allow no match. |
 | Context injection | After Plan approval | Never inject an unapproved Plan. |
 | Automatic tool execution | Disabled | Experience Map cannot grant tool authority. |
@@ -60,7 +60,7 @@ To reproduce the bilingual and paraphrase-oriented semantic path tested for this
 The Web profile can install the plugin and its optional peer runtime together:
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3 @huggingface/transformers@4.2.0
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6 @huggingface/transformers@4.2.0
 ```
 
 Add `@huggingface/transformers@4.2.0` to the `headless` and `experience-management` Profiles too if they will run semantic recall. DSH may warn that Transformers.js is not a DSH Bundle; that is expected, and it remains an ordinary dependency of that Profile. Review the [security policy](../SECURITY.md) before opting in.
@@ -127,14 +127,14 @@ Recommendation: keep the lexical default for zero extra dependency and the most 
 Suggestion detection and recall remain enabled when the Bundle is installed into the headless profile:
 
 ```sh
-dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.6
 dsh --profile headless "check the current tests and repair the same class of failure"
 ```
 
 A terminal has no save button, so persistence, dismissal, and Plan approval remain explicit management commands. Create a dedicated profile:
 
 ```sh
-dsh plugin --profile experience-management add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile experience-management add dsh-experience-map@0.1.0-beta.6
 ```
 
 Append this layer to `$DSH_HOME/profiles/experience-management/cordis.patch.yml`; do not overwrite existing user configuration:

@@ -3,13 +3,13 @@ import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client
 import type {
   SettingsDescribeFace,
   SettingsSchemaService,
-  SettingsScope,
-  SettingsScopeSnapshot,
+  ConfigForm,
+  ConfigFormSnapshot,
 } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   Button,
-  IconChevronDownOutline14,
-  IconSearchOutline16,
+  IconChevronDownOutlineRegular,
+  IconSearchOutlineRegular,
   Input,
   Pill,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -30,12 +30,12 @@ type Translate = PropsLocale<typeof NS>['t']
 
 interface ExperienceSettingsFace {
   readonly connection: ConnectionHandle
-  readonly settingsScope: SettingsScope<RuntimeSettings>
+  readonly configForm: ConfigForm<RuntimeSettings>
   readonly settingsSchema: SettingsSchemaService
   readonly settingsDescribe: SettingsDescribeFace
 }
 
-type SettingsCardProps = PropsRuntime<'settings.plugin.item'>
+type SettingsCardProps = PropsRuntime<'settings.plugins.tab'>
   & PropsLocale<typeof NS>
   & InjectFace<ExperienceSettingsFace>
 
@@ -159,15 +159,17 @@ const GROUPS: readonly GroupSpec[] = [
 /** Register the namespace card under the existing plugin-configuration keyed slot. */
 export function registerExperienceSettings(ctx: Context): void {
   const connection = ctx.get('connection') as ConnectionHandle
-  const scope = ctx.settingsScope.bind<RuntimeSettings>({ namespace: NS })
-  const describe = ctx.settingsScope.describe()
-  ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
-    name: 'settings.plugin.item',
-    key: NS,
+  const form = ctx.configForms.get<RuntimeSettings>(NS)
+  const describe = ctx.configForms.describe()
+  ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({
+    name: 'settings.plugins.tab',
+    id: NS,
+    order: 20,
+    label: () => ctx.locale.bind(NS)('settings.title'),
     locale: NS,
     inject: () => ({
       connection,
-      settingsScope: scope,
+      configForm: form,
       settingsSchema: ctx.settingsSchema,
       settingsDescribe: describe,
     }),
@@ -177,9 +179,9 @@ export function registerExperienceSettings(ctx: Context): void {
 /** Render the Experience Map namespace inside Settings > Plugins. */
 export function ExperienceSettingsCard(props: SettingsCardProps) {
   const settingsSource = useMemo(() => ({
-    subscribe: props.settingsScope.subscribe.bind(props.settingsScope),
-    getSnapshot: props.settingsScope.getSnapshot.bind(props.settingsScope),
-  }), [props.settingsScope])
+    subscribe: props.configForm.subscribe.bind(props.configForm),
+    getSnapshot: props.configForm.getSnapshot.bind(props.configForm),
+  }), [props.configForm])
   const snapshot = useSyncExternalStore(
     settingsSource.subscribe,
     settingsSource.getSnapshot,
@@ -242,7 +244,8 @@ export function ExperienceSettingsCard(props: SettingsCardProps) {
         : { op: 'set', path: [key], value: coerceDraft(key, draft.value) })
     }
     try {
-      await props.settingsScope.mutate(ops, draftRevision)
+      const accepted = await props.configForm.mutate(ops, draftRevision)
+      if (!accepted) throw new Error(props.t('settings.saveFailed'))
       setDrafts({})
       setDraftRevision(undefined)
     } catch (error) {
@@ -254,7 +257,7 @@ export function ExperienceSettingsCard(props: SettingsCardProps) {
 
   const title = props.t('settings.title')
   return (
-    <li className={`${css.card} ${cardOpen ? css.cardOpen : ''}`} data-testid="experience-settings-card">
+    <section className={`${css.card} ${cardOpen ? css.cardOpen : ''}`} data-testid="experience-settings-card">
       <button
         type="button"
         className={css.cardHeader}
@@ -267,7 +270,7 @@ export function ExperienceSettingsCard(props: SettingsCardProps) {
           <span className={css.cardDescription}>{props.t('settings.description')}</span>
         </span>
         {dirty ? <Pill>{props.t('settings.unsaved')}</Pill> : null}
-        <IconChevronDownOutline14 className={cardOpen ? css.chevronOpen : css.chevron} />
+        <IconChevronDownOutlineRegular className={cardOpen ? css.chevronOpen : css.chevron} />
       </button>
       {cardOpen ? (
         <div className={css.body}>
@@ -285,7 +288,7 @@ export function ExperienceSettingsCard(props: SettingsCardProps) {
                 : <AutomationEffectiveState value={automationConfiguration} t={props.t} />}
               <Input
                 type="search"
-                icon={<IconSearchOutline16 />}
+                icon={<IconSearchOutlineRegular />}
                 value={query}
                 className={css.search ?? ''}
                 placeholder={props.t('settings.search')}
@@ -336,7 +339,7 @@ export function ExperienceSettingsCard(props: SettingsCardProps) {
           ) : null}
         </div>
       ) : null}
-    </li>
+    </section>
   )
 }
 
@@ -368,7 +371,7 @@ function AutomationEffectiveState({ value, t }: {
 }
 
 function Availability({ snapshot, t }: {
-  readonly snapshot: SettingsScopeSnapshot<RuntimeSettings>
+  readonly snapshot: ConfigFormSnapshot<RuntimeSettings>
   readonly t: Translate
 }) {
   if (snapshot.status === 'loading') return <p className={css.notice} role="status">{t('settings.loading')}</p>
@@ -381,7 +384,7 @@ function SettingsGroup(props: {
   readonly group: GroupSpec
   readonly query: string
   readonly open: boolean
-  readonly snapshot: SettingsScopeSnapshot<RuntimeSettings>
+  readonly snapshot: ConfigFormSnapshot<RuntimeSettings>
   readonly drafts: Partial<Record<RuntimeKey, DraftValue>>
   readonly disabled: boolean
   readonly t: Translate
@@ -402,7 +405,7 @@ function SettingsGroup(props: {
           <small>{props.t(`settings.group.${props.group.id}.description` as ExperienceLocaleKey)}</small>
         </span>
         {props.group.advanced ? <Pill>{props.t('settings.advanced')}</Pill> : null}
-        <IconChevronDownOutline14 className={open ? css.chevronOpen : css.chevron} />
+        <IconChevronDownOutlineRegular className={open ? css.chevronOpen : css.chevron} />
       </button>
       {open ? (
         <div className={css.fieldGrid}>
@@ -425,7 +428,7 @@ function SettingsGroup(props: {
 
 function SettingsField(props: {
   readonly spec: FieldSpec
-  readonly snapshot: SettingsScopeSnapshot<RuntimeSettings>
+  readonly snapshot: ConfigFormSnapshot<RuntimeSettings>
   readonly draft: DraftValue | undefined
   readonly disabled: boolean
   readonly t: Translate
@@ -516,7 +519,7 @@ function selectOptionLabel(key: RuntimeKey, option: string, t: Translate): strin
 function validateDraft(
   schema: SettingsSchemaService,
   describe: SettingsDescribeFace,
-  snapshot: SettingsScopeSnapshot<RuntimeSettings>,
+  snapshot: ConfigFormSnapshot<RuntimeSettings>,
   drafts: Partial<Record<RuntimeKey, DraftValue>>,
   t: Translate,
 ): string | null {
@@ -550,7 +553,7 @@ function coerceDraft(key: RuntimeKey, value: unknown): unknown {
     : (Number.isFinite(parsed) ? parsed : Number.NaN)
 }
 
-function inheritedValue(snapshot: SettingsScopeSnapshot<RuntimeSettings>, key: RuntimeKey): unknown {
+function inheritedValue(snapshot: ConfigFormSnapshot<RuntimeSettings>, key: RuntimeKey): unknown {
   return hasOwn(snapshot.base, key)
     ? (snapshot.base as Partial<RuntimeSettings>)[key]
     : undefined

@@ -1,33 +1,17 @@
-import { Context, type Fiber } from '@deepseek-ai/cordis'
-import { SettingsProvider, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
+import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it } from 'vitest'
 import { RESTART_CONFIG_KEYS } from '../src/index.js'
 import { automationConfiguration, RuntimeSettingsSource } from '../src/runtime-settings.js'
 import {
   RUNTIME_SETTINGS_KEYS,
   RuntimeSettingsSchema,
+  RuntimeSettingsConfigSchema,
   type RuntimeSettings,
+  type RuntimeSettingsConfig,
 } from '../src/runtime-settings-schema.js'
 
-class MemorySettings extends SettingsProvider {
-  doc: Record<string, unknown> = {}
-
-  get writable(): boolean {
-    return true
-  }
-
-  protected load(): Promise<Record<string, unknown>> {
-    return Promise.resolve(structuredClone(this.doc))
-  }
-
-  protected persist(ns: SettingsNamespace, section: Record<string, unknown>): Promise<void> {
-    this.doc = { ...this.doc, [ns]: structuredClone(section) }
-    return Promise.resolve()
-  }
-}
-
 describe('Experience Map runtime settings', () => {
-  it('keeps exactly 54 live fields and 12 restart-only fields', () => {
+  it('keeps exactly 56 live fields and 12 restart-only fields', () => {
     const runtime = runtimeDefaults()
     expect(RUNTIME_SETTINGS_KEYS).toHaveLength(56)
     expect(RESTART_CONFIG_KEYS).toHaveLength(12)
@@ -83,86 +67,48 @@ describe('Experience Map runtime settings', () => {
     expect(Object.isFrozen(view)).toBe(true)
   })
 
-  it('captures immutable operation settings and moves identity after one durable update', async () => {
-    const bench = await boot()
-    const first = bench.source.capture()
-    expect(first.revision).toBe(0)
+  it('captures immutable startup configuration without a competing settings writer', async () => {
+    const ctx = new Context()
+    const original = new RuntimeSettingsSource(ctx, hostSettings(runtimeDefaults()))
+    const first = original.capture()
+    expect(first.revision).toBeNull()
     expect(first.values.maxTokens).toBe(8_192)
     expect(Object.isFrozen(first)).toBe(true)
     expect(Object.isFrozen(first.values)).toBe(true)
 
-    await bench.ctx.settings.update('experience-map', { maxTokens: 12_288 }, first.revision ?? undefined)
-    const second = bench.source.capture()
+    const updated = new RuntimeSettingsSource(ctx, hostSettings({
+      ...runtimeDefaults(), maxTokens: 12_288,
+    }))
+    const second = updated.capture()
     expect(first.values.maxTokens).toBe(8_192)
     expect(second.values.maxTokens).toBe(12_288)
-    expect(second.revision).toBe(1)
     expect(second.digest).not.toBe(first.digest)
-    await bench.ctx.fiber.dispose()
+    await ctx.fiber.dispose()
   })
 
-  it('rejects invalid cross-field budgets before persistence', async () => {
-    const bench = await boot()
-    await expect(bench.ctx.settings.update('experience-map', {
-      maxRecordBytes: 65_536,
-      maxTotalBytes: 4_096,
-    })).rejects.toThrow('maxRecordBytes must not exceed maxTotalBytes')
-    expect(bench.source.capture().values.maxTotalBytes).toBe(262_144)
-    await bench.ctx.fiber.dispose()
+  it('rejects invalid cross-field budgets at the plugin configuration boundary', async () => {
+    const ctx = new Context()
+    expect(() => new RuntimeSettingsSource(ctx, hostSettings({
+      ...runtimeDefaults(), maxRecordBytes: 65_536, maxTotalBytes: 4_096,
+    }))).toThrow('maxRecordBytes must not exceed maxTotalBytes')
+    await ctx.fiber.dispose()
   })
 
-  it('rejects an enabled local embedding route without a pinned local artifact identity', async () => {
-    const bench = await boot()
-    await expect(bench.ctx.settings.update('experience-map', {
-      embeddingProvider: 'transformers_js',
-      embeddingModelPath: '',
-    })).rejects.toThrow('embeddingModelPath must be an absolute local directory')
-    await expect(bench.ctx.settings.update('experience-map', {
-      embeddingProvider: 'transformers_js',
-      embeddingModelPath: '/tmp/model',
-      embeddingArtifactSha256: 'not-a-digest',
-    })).rejects.toThrow('embeddingArtifactSha256')
-    expect(bench.source.capture().values.embeddingProvider).toBe('disabled')
-    await bench.ctx.fiber.dispose()
-  })
-
-  it('rejects a concurrent edit that uses a stale namespace revision', async () => {
-    const bench = await boot()
-    const revision = bench.source.capture().revision
-    const results = await Promise.allSettled([
-      bench.ctx.settings.update('experience-map', { maxTokens: 10_240 }, revision ?? undefined),
-      bench.ctx.settings.update('experience-map', { maxTokens: 12_288 }, revision ?? undefined),
-    ])
-
-    expect(results.map(result => result.status).sort()).toEqual(['fulfilled', 'rejected'])
-    expect(bench.source.capture()).toMatchObject({ revision: 1 })
-    await bench.ctx.fiber.dispose()
-  })
-
-  it('falls back to composition values when the optional settings provider detaches', async () => {
-    const bench = await boot()
-    await bench.ctx.settings.update('experience-map', { model: 'changed-model' })
-    expect(bench.source.capture().values.model).toBe('changed-model')
-
-    await bench.settingsFiber.dispose()
-
-    expect(bench.source.capture()).toMatchObject({
-      revision: null,
-      values: { model: 'deepseek-v4-flash' },
-    })
-    await bench.ctx.fiber.dispose()
+  it('rejects an enabled local embedding route without pinned local artifact identity', async () => {
+    const ctx = new Context()
+    expect(() => new RuntimeSettingsSource(ctx, hostSettings({
+      ...runtimeDefaults(), embeddingProvider: 'transformers_js', embeddingModelPath: '',
+    }))).toThrow('embeddingModelPath must be an absolute local directory')
+    expect(() => new RuntimeSettingsSource(ctx, hostSettings({
+      ...runtimeDefaults(), embeddingProvider: 'transformers_js',
+      embeddingModelPath: '/tmp/model', embeddingArtifactSha256: 'not-a-digest',
+    }))).toThrow('embeddingArtifactSha256')
+    await ctx.fiber.dispose()
   })
 })
 
-async function boot(): Promise<{
-  readonly ctx: Context
-  readonly settingsFiber: Fiber
-  readonly source: RuntimeSettingsSource
-}> {
-  const ctx = new Context()
-  const settingsFiber = ctx.plugin(MemorySettings)
-  await settingsFiber.await()
-  const source = new RuntimeSettingsSource(ctx, runtimeDefaults())
-  return { ctx, settingsFiber, source }
+function hostSettings(values: RuntimeSettings): RuntimeSettingsConfig {
+  return RuntimeSettingsConfigSchema(values as unknown as RuntimeSettingsConfig)
 }
 
 function runtimeDefaults(): RuntimeSettings {

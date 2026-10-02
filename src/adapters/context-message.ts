@@ -21,6 +21,19 @@ declare module '@deepseek-ai/dsh-llm' {
   }
 }
 
+/** Proposal-only source stays distinct from approved Context delivery provenance. */
+export interface ExperienceProposalMessageSource {
+  readonly kind: 'experience-proposal'
+  readonly plugin: 'dsh-experience-map'
+  readonly form: 'recall'
+}
+
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'experience-proposal': ExperienceProposalMessageSource
+  }
+}
+
 /** Build the single active Experience message that Agent Loop will append. */
 export function createExperienceContextMessage(
   content: string,

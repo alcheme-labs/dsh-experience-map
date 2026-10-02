@@ -7,7 +7,7 @@ kind: "package-bundle"
 
 English | [中文](README.zh.md)
 
-> Status: `0.1.0-beta.3` public beta, published as the unscoped npm package `dsh-experience-map` and as a matching GitHub Release tarball.
+> Status: `0.1.0-beta.6` targets DSH `0.2.0-rc.2` and uses task-completion notifications without automatic historical backfill; management labels and counts stay on one line. See [the changelog](CHANGELOG.md) for the beta.4–beta.6 behavior changes. The published `0.1.0-beta.3` remains for DSH `0.1.5-rc.2`; its artifact is unchanged.
 
 ## Summary
 
@@ -71,7 +71,7 @@ A Causal Experience is not automatically treated as established causality. The p
 
 ### Automatic suggestions and the save gate
 
-By default, the Bundle locally scans bounded intervals from recently completed Sessions and lists zero or more suggestions by Session. Repeated occurrences of the same stable kernel across Sessions share one group and one save action. This recent-N/TTL projection is disposable rather than a second durable experience store; unattended expired suggestions may be discarded.
+By default, the Bundle learns only tasks whose completion notifications it observes while running. Startup and periodic maintenance do not discover or read historical Sessions. Reused old Sessions contribute new completed tasks; tasks completed while the plugin was inactive are not automatically backfilled. Recent-N ordering uses already observed Session records and lists zero or more suggestions by Session. Repeated occurrences of the same stable kernel across Sessions share one group and one save action. This recent-N/TTL projection is disposable rather than a second durable experience store; unattended expired suggestions may be discarded.
 
 - A verified Procedure/Diagnostic, a verbatim user Preference with explicit scope and exception semantics, or a fresh structured Fact whose declared authority matches the actual tool call may become save-ready.
 - Strategy remains `needs_enrichment` or `needs_review`; Causal always begins as a `causal_candidate`. Neither local rules nor a model can promote them directly into one-click save.
@@ -80,7 +80,7 @@ By default, the Bundle locally scans bounded intervals from recently completed S
 
 ### Requirements
 
-- DeepSeek Harness `0.1.5-rc.2`.
+- DeepSeek Harness `0.2.0-rc.2` for plugin `0.1.0-beta.6`. Use the published plugin `0.1.0-beta.3` with DSH `0.1.5-rc.2`.
 - Node.js `^22.19.0` or `>=24.0.0`.
 - A configured Harness LLM provider only when you want the model to propose a Candidate.
 - `@huggingface/transformers` only when you deliberately enable the optional local dense-retrieval adapter. It is not installed automatically; review [SECURITY.md](SECURITY.md) first.
@@ -94,32 +94,29 @@ The npm package **does not bundle Transformers.js or model weights and does not 
 
 Vector similarity only discovers and ranks candidates after the hard gates. It cannot by itself authorize saving, exact merging, Context injection, or tool execution. Automatic dense applicability and semantic equivalence are currently calibrated only for Procedure and Diagnostic; another Experience kind cannot cross deterministic gates merely because it has a high vector score. To reproduce the release-tested local semantic path, follow the [pinned setup in the quickstart](docs/QUICKSTART.md#5-optional-enable-the-evaluated-local-semantic-recall) for `@huggingface/transformers@4.2.0` and the exact `Xenova/multilingual-e5-small` revision. Do not reuse these thresholds with an uncalibrated model. A missing, drifted, or unavailable model produces an explicit lexical fallback.
 
-### Install the public beta
+### Install the compatible version
 
-Add the public npm package to a Web profile and start that profile:
+For a DSH `0.2.0-rc.2` Web profile, install the exact npm version:
 
 ```sh
-dsh plugin --profile web add dsh-experience-map@0.1.0-beta.3
+dsh plugin --profile web add dsh-experience-map@0.1.0-beta.6
 dsh web
 ```
 
-The matching prebuilt tarball is also available from the immutable [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3).
+For DSH `0.1.5-rc.2`, install the published `dsh-experience-map@0.1.0-beta.3`; its [GitHub Release](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.3) remains unchanged. This repair is distributed on npm `beta`; `latest` remains `beta.3`.
 
-When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To build the same package from source instead:
+When running DSH from its source checkout, replace `dsh` with `pnpm dsh`. To clone this repository first:
 
 ```sh
 git clone https://github.com/alcheme-labs/dsh-experience-map.git
 cd dsh-experience-map
-pnpm install
-pnpm run build
-pnpm pack
 ```
 
 After installation, refresh any already-open Harness browser tabs, then open a conversation and select the `Experience` tab. A Host restart does not replace JavaScript already loaded in a tab. The Bundle does not open a separate website.
 
 ### Configure Experience Map
 
-Open `Settings → Plugins → Plugin configuration`, then expand `Experience Map`. The card exposes the 28 settings that can safely apply to the next operation without a Host restart. Changes are staged locally and saved as one revision-fenced mutation; a rejected or conflicting save keeps the draft for correction. Each operation captures one immutable settings snapshot, so a save never changes an extraction, Plan, verification, or learning batch already in progress. Candidate disclosure shows the captured settings revision and digest, and a later settings change invalidates the old confirmation.
+Open `Settings → Plugins → Plugin configuration`, then expand `Experience Map`. The card exposes the 56 settings that can safely apply to the next operation without a Host restart. Changes are staged locally and saved as one revision-fenced mutation; a rejected or conflicting save keeps the draft for correction. Each operation captures one immutable settings snapshot, so a save never changes an extraction, Plan, verification, or learning batch already in progress. Candidate disclosure shows the captured settings revision and digest, and a later settings change invalidates the old confirmation.
 
 The card groups default behavior and model generation first, with source/evidence, planning/verification, and learning batch controls under advanced sections. Resetting a field removes its user override and restores the Bundle composition value. The settings document never becomes a second Experience-domain writer: SQLite continues to own Candidates, Versions, Plans, Settlements, revisions, relations, and governance.
 
@@ -147,7 +144,7 @@ Database ownership and SQLite pragmas, the optional historical and verified-outc
 The Host plugin can load without Browser services, so CLI/headless profiles remain valid:
 
 ```sh
-pnpm dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.3
+pnpm dsh plugin --profile headless add dsh-experience-map@0.1.0-beta.6
 pnpm dsh --profile headless "your task"
 ```
 
@@ -283,7 +280,7 @@ The Bundle does not modify the static system prompt. Candidate proposal Sessions
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- The npm release uses the unscoped package name `dsh-experience-map`; supported installation is pinned to the verified `0.1.0-beta.3` artifact.
+- Distribution uses the unscoped npm package `dsh-experience-map`. Published `0.1.0-beta.3` supports DSH `0.1.5-rc.2`; repair release `0.1.0-beta.6` supports DSH `0.2.0-rc.2`. Each future DSH preview upgrade requires a fresh compatibility check.
 - Automatic admission is disabled by default. All six learning and automation capabilities ship at `shadow`; no evaluation promotes them automatically.
 - SQLite remains the canonical store; no graph database is required. Retrieval can optionally use a pinned local Transformers.js embedding artifact and otherwise keeps the lexical fallback. Transformers.js is an explicit optional peer while current upstream native dependency advisories remain open.
 - Causal records remain evidence-graded candidates unless stronger evidence is reviewed; the Bundle is not a general causal-inference engine.

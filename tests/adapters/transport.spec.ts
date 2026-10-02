@@ -1,7 +1,7 @@
 import { Context } from '@deepseek-ai/cordis'
-import type { ConnectionFetchRoute, ConnectionRpcHandler, HostConnectionHandle } from '@deepseek-ai/dsh-client-connection'
+import type { ConnectionFetchRoute, HostConnectionHandle } from '@deepseek-ai/dsh-client-connection'
 import { describe, expect, it, vi } from 'vitest'
-import { createExperienceRpcHandler, registerExperienceTransport } from '../../src/adapters/transport.js'
+import { createExperienceRpcHandler, registerExperienceTransport, type ExperienceRpcHandler } from '../../src/adapters/transport.js'
 import { brandedId } from '../../src/ids.js'
 import type { DomainReceipt, ForgetDomainReceipt } from '../../src/types.js'
 import { automationConfigurationFixture } from '../fixtures/automation.js'
@@ -46,9 +46,9 @@ describe('M2 authenticated Browser transport', () => {
 
   it('reads recent suggestions without accepting forged query fields', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
-      rpc: { handle(_channel: string, registered: ConnectionRpcHandler) { handler = registered; return async () => {} } },
+      rpc: { handle(_channel: string, registered: ExperienceRpcHandler) { handler = registered; return async () => {} } },
     } as HostConnectionHandle)
     const getSuggestionProjection = vi.fn(() => ({
       projectionKey: 'experience-suggestions-v1', generation: 1, sessions: [], seeds: [],
@@ -119,9 +119,9 @@ describe('M2 authenticated Browser transport', () => {
 
   it('reads automation configuration only from the authenticated owner boundary', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
-      rpc: { handle(_channel: string, registered: ConnectionRpcHandler) { handler = registered; return async () => {} } },
+      rpc: { handle(_channel: string, registered: ExperienceRpcHandler) { handler = registered; return async () => {} } },
     } as HostConnectionHandle)
     const getAutomationConfiguration = vi.fn(() => automationConfigurationFixture())
     ctx.provide('experiences', { getAutomationConfiguration } as never)
@@ -141,9 +141,9 @@ describe('M2 authenticated Browser transport', () => {
 
   it('allows planning history to inherit Host settings or use a bounded explicit limit', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
-      rpc: { handle(_channel: string, registered: ConnectionRpcHandler) { handler = registered; return async () => {} } },
+      rpc: { handle(_channel: string, registered: ExperienceRpcHandler) { handler = registered; return async () => {} } },
     } as HostConnectionHandle)
     const listPlanningResults = vi.fn(() => [])
     ctx.provide('experiences', { listPlanningResults } as never)
@@ -167,9 +167,9 @@ describe('M2 authenticated Browser transport', () => {
 
   it('keeps Forget preview, commit, and readback behind authenticated owner endpoints', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
-      rpc: { handle(_channel: string, registered: ConnectionRpcHandler) { handler = registered; return async () => {} } },
+      rpc: { handle(_channel: string, registered: ExperienceRpcHandler) { handler = registered; return async () => {} } },
     } as HostConnectionHandle)
     const previewForget = vi.fn(() => ({ previewDigest: `sha256:${'a'.repeat(64)}` }))
     const forgetExperience = vi.fn(async () => forgetReceipt())
@@ -194,9 +194,9 @@ describe('M2 authenticated Browser transport', () => {
 
   it('reads the reconciled M6 learning projection through the existing authenticated channel', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
-      rpc: { handle(_channel: string, registered: ConnectionRpcHandler) { handler = registered; return async () => {} } },
+      rpc: { handle(_channel: string, registered: ExperienceRpcHandler) { handler = registered; return async () => {} } },
     } as HostConnectionHandle)
     const getLearningProjection = vi.fn(async () => ({
       projectionKey: 'experience-learning-v1', builderVersion: 'm6-learning-v2',
@@ -215,9 +215,9 @@ describe('M2 authenticated Browser transport', () => {
 
   it('exposes M7 projections, evaluation, and write receipts through the authenticated channel', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
-      rpc: { handle(_channel: string, registered: ConnectionRpcHandler) { handler = registered; return async () => {} } },
+      rpc: { handle(_channel: string, registered: ExperienceRpcHandler) { handler = registered; return async () => {} } },
     } as HostConnectionHandle)
     const exportMarkdown = vi.fn(async () => ({ receipt: { markdownProjectionReceiptId: 'projection-1' }, markdown: '# projection' }))
     const proposeMarkdownRevision = vi.fn(async () => ({ receiptId: 'receipt-markdown-1' }))
@@ -275,10 +275,10 @@ describe('M2 authenticated Browser transport', () => {
 
   it('parses Candidate commands, derives Browser origin, and returns only a Receipt key', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
       rpc: {
-        handle(channel: string, registered: ConnectionRpcHandler) {
+        handle(channel: string, registered: ExperienceRpcHandler) {
           expect(channel).toBe('/experience-map')
           handler = registered
           return async () => {}
@@ -303,10 +303,10 @@ describe('M2 authenticated Browser transport', () => {
 
   it('propagates the authenticated request cancellation to proposal work', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
       rpc: {
-        handle(_channel: string, registered: ConnectionRpcHandler) {
+        handle(_channel: string, registered: ExperienceRpcHandler) {
           handler = registered
           return async () => {}
         },
@@ -331,10 +331,10 @@ describe('M2 authenticated Browser transport', () => {
 
   it('rejects a Client-injected trigger kind before proposal work starts', async () => {
     const ctx = new Context()
-    let handler: ConnectionRpcHandler | undefined
+    let handler: ExperienceRpcHandler | undefined
     ctx.provide('connection', {
       rpc: {
-        handle(_channel: string, registered: ConnectionRpcHandler) {
+        handle(_channel: string, registered: ExperienceRpcHandler) {
           handler = registered
           return async () => {}
         },

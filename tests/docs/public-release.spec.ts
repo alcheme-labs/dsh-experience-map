@@ -24,7 +24,7 @@ describe('public release boundary', () => {
       readonly keywords?: readonly string[]
     }
     expect(packageJson.author).toBe('杭州星原驱动科技有限公司')
-    expect(packageJson.version).toBe('0.1.0-beta.3')
+    expect(packageJson.version).toBe('0.1.0-beta.6')
     expect(packageJson.repository?.url).toBe('git+https://github.com/alcheme-labs/dsh-experience-map.git')
     expect(packageJson.optionalDependencies?.['@huggingface/transformers']).toBeUndefined()
     expect(packageJson.peerDependencies?.['@huggingface/transformers']).toBe('4.2.0')
@@ -82,7 +82,7 @@ describe('public release boundary', () => {
   })
 
   it('uses the published unscoped beta package in public installation guidance', async () => {
-    const packageSpec = 'dsh-experience-map@0.1.0-beta.3'
+    const packageSpec = 'dsh-experience-map@0.1.0-beta.6'
     const documents = await Promise.all([
       'README.md',
       'README.zh.md',

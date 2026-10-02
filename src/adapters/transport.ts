@@ -1,7 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import {
   clientRequestSchema,
-  type ConnectionRpcHandler,
   type ConnectionRpcResult,
   type HostConnectionHandle,
 } from '@deepseek-ai/dsh-client-connection'
@@ -55,8 +54,13 @@ export function registerExperienceTransport(ctx: Context): void {
   }), 'experience-map authenticated readback RPC route')
 }
 
+/** The authenticated Fetch route has already applied the connection's peer admission. */
+export type ExperienceRpcHandler = (
+  endpoint: string, payload: unknown, signal: AbortSignal,
+) => Promise<ConnectionRpcResult<unknown>>
+
 /** Build the endpoint dispatcher separately so domain authorization remains transport-independent. */
-export function createExperienceRpcHandler(ctx: Context): ConnectionRpcHandler {
+export function createExperienceRpcHandler(ctx: Context): ExperienceRpcHandler {
   return async (endpoint, payload, signal) => {
     try {
       if (endpoint === 'suggestions/query') {
@@ -423,7 +427,7 @@ export function createExperienceRpcHandler(ctx: Context): ConnectionRpcHandler {
 
 async function handleExperienceRpcRequest(
   request: Request,
-  handler: ConnectionRpcHandler,
+  handler: ExperienceRpcHandler,
 ): Promise<Response> {
   const mediaType = request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
   if (mediaType !== 'application/json') return new Response('content type must be application/json', { status: 415 })

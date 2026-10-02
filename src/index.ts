@@ -40,7 +40,10 @@ import { ExperienceDatabase, type DatabaseConfig } from './persistence/database.
 import { ExperienceRepository } from './persistence/repository.js'
 import { ExperienceProjectionStore } from './persistence/projection-store.js'
 import { automationConfiguration, RuntimeSettingsSource } from './runtime-settings.js'
-import { RuntimeSettingsSchema, type RuntimeSettings } from './runtime-settings-schema.js'
+import {
+  RUNTIME_SETTINGS_KEYS, RuntimeSettingsConfigSchema,
+  type RuntimeSettings, type RuntimeSettingsConfig,
+} from './runtime-settings-schema.js'
 import type {
   DomainReceipt,
   ExperienceDomainReceipt,
@@ -176,13 +179,25 @@ export type {
 } from './types.js'
 
 /** Validated Host plugin configuration. */
-export interface Config extends DatabaseConfig, RuntimeSettings, SessionSourceConfig,
+interface ResolvedConfig extends DatabaseConfig, RuntimeSettings, SessionSourceConfig,
   ExtractionEvidenceConfig, TaskFingerprintProposalConfig, LearningProjectorConfig {
   readonly historicalSourcePath?: string
   readonly historicalSourceRunId?: string
   readonly historicalSourceAggregateDigest?: string
   readonly historicalSourceRecords: HistoricalRecordConfig[]
   readonly verifiedOutcomeManifest?: unknown
+}
+
+/** DSH 0.2 Host Config exposes live fields through Volatile references. */
+export type Config = Omit<ResolvedConfig, keyof RuntimeSettings> & RuntimeSettingsConfig
+
+/** Read live refs through one stable plain-config view for existing consumers. */
+function resolvedConfig(config: Config): ResolvedConfig {
+  const resolved = { ...config } as unknown as ResolvedConfig
+  for (const key of RUNTIME_SETTINGS_KEYS) {
+    Object.defineProperty(resolved, key, { enumerable: true, get: () => config[key].get() })
+  }
+  return resolved
 }
 
 /** Startup-only configuration vocabulary; changing these fields requires plugin reload. */
@@ -202,7 +217,7 @@ export const RESTART_CONFIG_KEYS = [
 ] as const satisfies readonly (keyof Config)[]
 
 /** Schemastery validator for the canonical database owner. */
-export const Config: z<Config> = z.intersect([z.object({
+export const Config: z<Config> = z.object({
   databasePath: z.string().required(),
   journalMode: z.union(['wal', 'delete', 'truncate', 'persist'] as const).default('wal'),
   synchronous: z.union(['normal', 'full'] as const).default('normal'),
@@ -219,7 +234,8 @@ export const Config: z<Config> = z.intersect([z.object({
   verifiedOutcomeManifest: z.any().required(false),
   taskFingerprintProposalMode: z.union(['deterministic', 'model'] as const).default('deterministic'),
   learningPollIntervalMs: z.number().step(1).min(100).max(60_000).default(1_000),
-}), RuntimeSettingsSchema]) as z<Config>
+  ...RuntimeSettingsConfigSchema.dict!,
+}) as z<Config>
 
 /** Public Host use cases shared by Browser, management CLI, and restricted runtime callers. */
 export interface ExperiencesApi {
@@ -369,13 +385,15 @@ export class Experiences extends Service implements ExperiencesApi {
   private application: ExperienceApplicationService | undefined
   private learning: ExperienceLearningProjector | undefined
   private readonly runtimeSettings: RuntimeSettingsSource
+  private readonly config: ResolvedConfig
 
   /** Register the service and optional Web transport; Browser absence remains legal. */
-  constructor(ctx: Context, private readonly config: Config) {
+  constructor(ctx: Context, config: Config) {
     super(ctx, 'experiences')
     // Register the settings namespace before async database initialization so
     // the Client's one cold-boot settings.describe read cannot miss it.
     this.runtimeSettings = new RuntimeSettingsSource(ctx, config)
+    this.config = resolvedConfig(config)
     ctx.inject(['connection'], connectionCtx => {
       registerExperienceTransport(connectionCtx)
     })
@@ -395,7 +413,7 @@ export class Experiences extends Service implements ExperiencesApi {
       const runtimeSettings = this.runtimeSettings
       const historicalConfig = resolveHistoricalSource(this.config)
       const outcomeManifest = resolveVerifiedOutcomeManifest(this.config.verifiedOutcomeManifest)
-      const sessions = new DshSessionSource(this.ctx.sessionQuery, this.config)
+      const sessions = new DshSessionSource(this.ctx.sessionQuery, this.config, () => this.ctx.get('sessionPersistence'))
       suggestionStore = await ExperienceProjectionStore.open(this.config.databasePath)
       const embedding = new TransformersLocalEmbeddingProvider()
       retrievalProjection = new ExperienceRetrievalProjection(
@@ -418,16 +436,17 @@ export class Experiences extends Service implements ExperiencesApi {
         maxInlineFieldBytes: this.config.maxInlineFieldBytes,
       }, () => repository.listSuggestionSaveReceipts(
         actors.resolve({ kind: 'management-cli' }),
-      ), async () => { await retrievalProjection!.rebuild() }, () => runtimeSettings.capture(),
-      groups => consolidatePublishedSuggestionDuplicates(
+      ), async signal => { await retrievalProjection!.rebuild(signal) }, () => runtimeSettings.capture(),
+      (groups, signal) => consolidatePublishedSuggestionDuplicates(
         groups,
         suggestionStore!.readRetrievalInternal(),
         repository.listActiveVersionsForProjection(actors.resolve({ kind: 'management-cli' })),
         runtimeSettings.capture(),
         embedding,
+        signal,
       ))
       suggestionWorker.install()
-      await suggestionWorker.drain()
+      // History-derived suggestions are rebuildable and must not gate Host activation.
       const historical = new HistoricalSource(historicalConfig, this.config)
       const outcomeEvidence = new OutcomeEvidenceSource(outcomeManifest, this.config)
       const proposer = new DiagnosticProposalLlm(
@@ -531,6 +550,10 @@ export class Experiences extends Service implements ExperiencesApi {
       ownedSuggestionStore?.close()
       if (owned !== undefined) await owned.close()
     }
+    // Register cleanup and publish the canonical service before starting background work.
+    void suggestionWorker.drain().catch(() => {
+      this.ctx.logger('experience-map').warn('Initial suggestion projection failed; the last good generation remains active')
+    })
   }
 
   /** Read the active sidecar generation for owner-facing Browser or management surfaces. */
@@ -598,14 +621,14 @@ export class Experiences extends Service implements ExperiencesApi {
         receipt.receiptId,
       )
     }
-    try {
-      await this.suggestionWorker?.drain()
-    } catch {
+    // The canonical receipt and saved disposition are durable already. A full
+    // history scan must not delay acknowledgement of the owner's committed save.
+    void this.suggestionWorker?.drain().catch(() => {
       this.ctx.logger('experience-map').warn(
         'Suggestion save committed as receipt %s; retrieval projection reconciliation will retry',
         receipt.receiptId,
       )
-    }
+    })
     return receipt
   }
 
@@ -1005,7 +1028,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export default Experiences
 
-function resolveHistoricalSource(config: Config): HistoricalSourceConfig | undefined {
+function resolveHistoricalSource(config: ResolvedConfig): HistoricalSourceConfig | undefined {
   const values = [
     config.historicalSourcePath,
     config.historicalSourceRunId,

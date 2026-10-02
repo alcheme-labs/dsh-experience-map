@@ -193,12 +193,14 @@ describe('E3 symmetric retrieval projection', () => {
       ) STRICT;
       INSERT INTO suggestion_dispositions SELECT * FROM suggestion_dispositions_v5;
       DROP TABLE suggestion_dispositions_v5;
+      DROP TABLE suggestion_history;
+      DROP TABLE suggestion_session_progress;
       PRAGMA user_version = 4;
     `)
     handle.close()
 
     const reopened = await ExperienceProjectionStore.open(path)
-    expect(reopened.handle.prepare('PRAGMA user_version').get()).toEqual({ user_version: 5 })
+    expect(reopened.handle.prepare('PRAGMA user_version').get()).toEqual({ user_version: 7 })
     expect(reopened.handle.prepare(
       "SELECT COUNT(*) AS count FROM pragma_index_list('suggestion_dispositions') WHERE [unique] = 1 AND origin = 'u'",
     ).get()).toEqual({ count: 0 })
@@ -272,6 +274,34 @@ describe('E3 symmetric retrieval projection', () => {
     expect(store.readRetrievalInternal().vectors.size).toBe(0)
     await projection.dispose()
     expect(provider.dispose).toHaveBeenCalledTimes(1)
+    store.close()
+  })
+
+  it('preserves the previous retrieval generation when shutdown cancels an embedding rebuild', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'experience-retrieval-cancel-'))
+    cleanup.push(directory)
+    const store = await ExperienceProjectionStore.open(join(directory, 'experience.sqlite'))
+    const provider = fakeProvider(new Float32Array([0.6, 0.8]))
+    const projection = new ExperienceRetrievalProjection(
+      { listActiveVersionsForProjection: () => [version()] }, store, actor(),
+      () => settings('transformers_js', 2), provider,
+    )
+    const previous = await projection.rebuild()
+    const started = Promise.withResolvers<void>()
+    provider.embedBatch.mockImplementationOnce(async (_id, _texts, _role, _config, signal) => {
+      started.resolve()
+      await new Promise((_resolve, reject) => signal?.addEventListener('abort',
+        () => reject(signal.reason), { once: true }))
+      throw new Error('cancelled provider cannot complete')
+    })
+    const controller = new AbortController()
+    const rebuilding = projection.rebuild(controller.signal)
+    const rejected = expect(rebuilding).rejects.toMatchObject({ name: 'AbortError' })
+    await started.promise
+    controller.abort()
+    await rejected
+    expect(store.readRetrieval()).toEqual(previous)
+    await projection.dispose()
     store.close()
   })
 

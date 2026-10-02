@@ -1,12 +1,12 @@
 import type { Context } from '@deepseek-ai/cordis'
+import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 import type { ConvViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { SessionPendingInteractionSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import {
   Button,
-  IconCheckOutline14,
-  IconRefreshOutline14,
+  IconCheckOutlineRegular,
+  IconRefreshOutlineRegular,
   Pill,
   StateDot,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -117,11 +117,12 @@ function ExperienceWorkspace({
   store,
   t,
   sessionId,
-  useSessionPendingInteraction,
+  useSessionStatus,
 }: ViewProps & { readonly store: ExperienceStore }) {
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot)
-  const planReviewKey = useSessionPendingInteraction((interactions: SessionPendingInteractionSnapshot) => {
-    const interaction = interactions.get(sessionId)
+  const planReviewKey = useSessionStatus((statuses: SessionStatusSnapshot) => {
+    const interaction = statuses.get(sessionId)?.pendingInteraction
+
     return interaction?.kind === 'plan-review' ? interaction.key : undefined
   })
   const previousPlanReviewKey = useRef<string | undefined>(undefined)
@@ -267,7 +268,7 @@ function TaskNavigation({ active, current, setActive, t }: {
             onClick={() => setActive(item)}
           >
             <span className={css.stageRow}>
-              <span className={css.stageMarker}>{state === 'done' ? <IconCheckOutline14 /> : index + 1}</span>
+              <span className={css.stageMarker}>{state === 'done' ? <IconCheckOutlineRegular /> : index + 1}</span>
               <span>
                 <span className={css.stageName}>{t(`task.stage.${item}`)}</span>
                 <span className={css.stageHint}>{t(`task.stageHint.${state}`)}</span>
@@ -297,12 +298,12 @@ function ManagementNavigation({ state, store, active, setActive, t }: {
   return <>
     <div className={css.navigationHeading}>
       <h3 className={css.navigationTitle}>{t('management.pending')}</h3>
-      <Button size="sm" variant="toolbar" icon={<IconRefreshOutline14 />} aria-label={t('action.refresh')}
+      <Button size="sm" variant="toolbar" icon={<IconRefreshOutlineRegular />} aria-label={t('action.refresh')}
         disabled={state.running} onClick={() => void store.refresh()} />
     </div>
     <ul className={css.candidateList} data-testid="experience-management-sections">
       {sections.map(([section, count]) => <li key={section}>
-        <button type="button" className={css.candidateButton} aria-current={active === section}
+        <button type="button" className={`${css.candidateButton} ${css.managementSectionButton}`} aria-current={active === section}
           onClick={() => setActive(section)}>
           <strong>{t(`suggestion.section.${section}`)}</strong>
           <span>{count}</span>
@@ -352,11 +353,15 @@ function SuggestionWorkbench({ state, store, section, selectedGroupId, selectGro
       <div>
         <h2>{t(`suggestion.section.${section}`)}</h2>
         <p>{t(`suggestion.description.${section}`)}</p>
+        <p>{t('suggestion.observedTasksOnly')}</p>
       </div>
       <Pill>{groups.length}</Pill>
     </header>
     {projection?.state !== 'degraded' ? null : <p className={css.suggestionWarning} role="status">
       {t('suggestion.projectionDegraded')}
+    </p>}
+    {projection?.history === undefined || projection.history.state === 'complete' ? null : <p className={css.muted} role="status">
+      {t(`suggestion.history.${projection.history.state}`)} ({projection.history.total - projection.history.remaining}/{projection.history.total})
     </p>}
     {(projection?.suppressedGroupCount ?? 0) === 0 ? null : <p className={css.muted}>
       {t('suggestion.suppressed')}: {projection!.suppressedGroupCount}

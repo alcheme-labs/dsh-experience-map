@@ -203,7 +203,7 @@ describe('M2 proposal disclosure and schema gate', () => {
           type: 'tool-call', name: 'submit_diagnostic_candidate', arguments: JSON.stringify(generated),
         })],
       }),
-      expect.objectContaining({ role: 'user', content: [expect.objectContaining({ type: 'tool-result', isError: false })] }),
+      expect.objectContaining({ role: 'tool', isError: false, toolCallId: 'candidate-0' }),
     ])
     expect(result.metadata.proposalSessionId).toMatch(/^experience-proposal-/u)
   })

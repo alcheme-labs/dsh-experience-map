@@ -33,7 +33,7 @@ beforeAll(async () => {
         path: 'primitives', namespace: 'suggestion-review',
       }))
       plugin.onLoad({ filter: /.*/, namespace: 'suggestion-review' }, () => ({
-        contents: 'export const Button=({children,...props})=>({type:"button",props:{...props,children}});export const Pill=Button;export const StateDot=Button;export const IconCheckOutline14=()=>null;export const IconRefreshOutline14=()=>null;export const IconCloseOutline16=()=>null;export const IconPanelLeftOutline16=()=>null;',
+        contents: 'export const Button=({children,...props})=>({type:"button",props:{...props,children}});export const Pill=Button;export const StateDot=Button;export const IconCheckOutlineRegular=()=>null;export const IconRefreshOutlineRegular=()=>null;export const IconCloseOutlineRegular=()=>null;export const IconPanelLeftOutlineRegular=()=>null;',
         loader: 'js',
       }))
       plugin.onLoad({ filter: /\.css$/ }, () => ({ contents: 'export default {}', loader: 'js' }))
@@ -50,6 +50,19 @@ beforeAll(async () => {
 afterAll(() => rmSync(temp, { recursive: true, force: true }))
 
 describe('E3 Experience Tab suggestion decision surface', () => {
+  it.each(['discovering','running','paused','failed'] as const)('shows Host-owned %s history progress without withholding an existing save action', state => {
+    const saveSuggestion = vi.fn(async () => {})
+    const nodes = flatten(render('recent_suggestions',[suggestionGroup('ready')],vi.fn(async()=>{}),saveSuggestion,0,
+      {state,total:100,remaining:40}))
+    const status = nodes.find(node=>node.props.role==='status')
+    expect(nodeText(status!)).toContain(zh[`suggestion.history.${state}`])
+    expect(nodeText(status!).replace(/\s+/g,'')).toContain('60/100')
+    const save = nodes.find(node=>node.type==='button' && nodeText(node).includes('保存为经验'))!
+    expect(save.props.disabled).not.toBe(true)
+    ;(save.props.onClick as ()=>void)()
+    expect(saveSuggestion).toHaveBeenCalledTimes(1)
+  })
+
   it('renders one consolidated card and invokes the single ready-save action', () => {
     const group = suggestionGroup('ready')
     const dismissSuggestion = vi.fn(async () => {})
@@ -223,10 +236,11 @@ function render(
   dismissSuggestion: ExperienceStore['dismissSuggestion'],
   saveSuggestion: ExperienceStore['saveSuggestion'] = vi.fn(async () => {}),
   suppressedGroupCount = 0,
+  history?: SuggestionProjectionView['history'],
 ): unknown {
   const state = {
     phase: 'ready', candidates: [], planningResults: [], proposalStatus: 'idle', running: false,
-    suggestions: projection(groups, suppressedGroupCount),
+    suggestions: {...projection(groups, suppressedGroupCount),...history===undefined ? {} : {history}},
   } satisfies ViewState
   return renderSuggestionWorkbench({
     state,

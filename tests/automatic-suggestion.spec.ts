@@ -10,11 +10,12 @@ import {
   type SessionEvent,
 } from '@deepseek-ai/dsh-session'
 import type {
+  SessionObservation,
   SessionEventRecord,
   SessionLogSnapshot,
   SessionRecord,
 } from '@deepseek-ai/dsh-session-query'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DshSessionSource } from '../src/adapters/session-source.js'
 import {
   DEFAULT_EXPERIENCE_PROJECTION_POLICY,
@@ -36,28 +37,35 @@ import { RuntimeSettingsSchema, type RuntimeSettings } from '../src/runtime-sett
 
 const cleanup: string[] = []
 
+// Fixed evaluation clock keeps bounded suggestion lifetimes meaningful after the release date.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-10T10:00:00.000Z'))
+})
+
 afterEach(async () => {
   vi.restoreAllMocks()
+  vi.useRealTimers()
   await Promise.all(cleanup.splice(0).map(path => rm(path, { recursive: true, force: true })))
 })
 
 describe('E1 recent Session segmenter and deterministic detector', () => {
-  it('uses public corpus APIs, retains only recent-N completed turns, and produces a stable P/D seed', async () => {
+  it('reads explicit Session identities, retains only recent-N completed turns, and produces a stable P/D seed', async () => {
     const now = new Date('2026-09-10T08:00:00.000Z')
     const recentA = session('session-a', now.getTime() - 2_000, diagnosticEvents(now.getTime() - 2_000))
-    const recentB = session('session-b', now.getTime() - 1_000, procedureEvents(now.getTime() - 1_000))
+    const recentB = session('session-b', now.getTime() - 20 * 24 * 60 * 60_000, procedureEvents(now.getTime() - 1_000))
     const expired = session('session-old', now.getTime() - 20 * 24 * 60 * 60_000,
       procedureEvents(now.getTime() - 20 * 24 * 60 * 60_000))
-    const calls = { listSessions: 0, listEvents: 0, readSession: 0, readEvent: 0 }
+    const calls = { listSessions: 0, listEvents: 0, readSession: 0, readEvent: 0, observations: 0, disposed: 0 }
     const source = new DshSessionSource(query([recentA, recentB, expired], calls), sourceLimits())
 
-    const batch = await source.scanRecentCompletedTurns(1, 14 * 24 * 60 * 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(1, 14 * 24 * 60 * 60_000, now, undefined, ['session-a', 'session-b', 'session-old'])
 
     expect(batch.sourceWatermarkDigest).toMatch(/^sha256:[a-f0-9]{64}$/)
     expect(batch.sessions.map(item => item.sessionId)).toEqual(['session-b'])
     expect(batch.sessions[0]?.slices).toHaveLength(1)
-    expect(calls).toEqual({ listSessions: 1, listEvents: 3, readSession: 1, readEvent: 1 })
-    const diagnosticBatch = await source.scanRecentCompletedTurns(2, 14 * 24 * 60 * 60_000, now)
+    expect(calls).toEqual({ listSessions: 0, listEvents: 0, readSession: 0, readEvent: 0, observations: 3, disposed: 3 })
+    const diagnosticBatch = await source.scanRecentCompletedTurns(2, 14 * 24 * 60 * 60_000, now, undefined, ['session-a', 'session-b', 'session-old'])
     const slice = diagnosticBatch.sessions.find(item => item.sessionId === 'session-a')!.slices[0]!
     const first = detectSuggestionSeed(slice, '/workspace/a', 14 * 24 * 60 * 60_000, evidenceLimits())
     const second = detectSuggestionSeed(slice, '/workspace/a', 14 * 24 * 60 * 60_000, evidenceLimits())
@@ -84,7 +92,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
     const shellSource = new DshSessionSource(query([
       session('session-shell-exit', now.getTime(), renderedShellFailure),
     ]), sourceLimits())
-    const shellBatch = await shellSource.scanRecentCompletedTurns(1, 60_000, now)
+    const shellBatch = await shellSource.scanRecentCompletedTurns(1, 60_000, now, undefined, ['session-shell-exit'])
     expect(detectSuggestionSeed(
       shellBatch.sessions[0]!.slices[0]!, '/workspace/shell', 60_000, evidenceLimits(),
     )).toMatchObject({
@@ -105,7 +113,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
       user(6, now.getTime() + 6, 2, '尚未完成'),
     ])
     const source = new DshSessionSource(query([noVerifier]), sourceLimits())
-    const batch = await source.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now, undefined, ['session-no-verifier'])
     expect(batch.sessions[0]?.slices).toHaveLength(1)
     expect(detectSuggestionSeed(batch.sessions[0]!.slices[0]!, '/workspace/no', 60_000, evidenceLimits()))
       .toBeNull()
@@ -123,7 +131,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
       turnEnd(6, now.getTime() + 6, 1),
     ])
     const source = new DshSessionSource(query([unsafe]), sourceLimits())
-    const batch = await source.scanRecentCompletedTurns(1, 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(1, 60_000, now, undefined, ['session-unowned-kill'])
 
     expect(detectSuggestionSeed(
       batch.sessions[0]!.slices[0]!, '/workspace/unsafe', 60_000, evidenceLimits(),
@@ -140,7 +148,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
       turnEnd(4, now.getTime() + 4, 1),
     ])
     const source = new DshSessionSource(query([search]), sourceLimits())
-    const batch = await source.scanRecentCompletedTurns(1, 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(1, 60_000, now, undefined, ['session-search-kill'])
 
     expect(detectSuggestionSeed(
       batch.sessions[0]!.slices[0]!, '/workspace/search', 60_000, evidenceLimits(),
@@ -161,7 +169,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
       turnEnd(2, now.getTime() + 12, 1),
     ])
     const source = new DshSessionSource(query([preference, strategy]), sourceLimits())
-    const batch = await source.scanRecentCompletedTurns(8, 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(8, 60_000, now, undefined, ['session-preference', 'session-strategy'])
 
     const preferenceSeed = detectSuggestionSeed(
       batch.sessions.find(item => item.sessionId === 'session-preference')!.slices[0]!,
@@ -205,7 +213,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
       turnEnd(4, now.getTime() + 24, 1),
     ])
     const source = new DshSessionSource(query([fact, causalWithoutObservation, causal]), sourceLimits())
-    const batch = await source.scanRecentCompletedTurns(8, 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(8, 60_000, now, undefined, ['session-fact', 'session-causal-empty', 'session-causal'])
     const detect = (sessionId: string) => detectSuggestionSeed(
       batch.sessions.find(item => item.sessionId === sessionId)!.slices[0]!,
       `/workspace/${sessionId}`, 60_000, evidenceLimits(),
@@ -220,7 +228,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
     const proseSource = new DshSessionSource(query([
       session('session-prose-fact', now.getTime(), proseFact),
     ]), sourceLimits())
-    const proseBatch = await proseSource.scanRecentCompletedTurns(1, 60_000, now)
+    const proseBatch = await proseSource.scanRecentCompletedTurns(1, 60_000, now, undefined, ['session-prose-fact'])
     expect(detectSuggestionSeed(
       proseBatch.sessions[0]!.slices[0]!, '/workspace/prose', 60_000, evidenceLimits(),
     )).toBeNull()
@@ -230,7 +238,7 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
     const forgedSource = new DshSessionSource(query([
       session('session-forged-fact', now.getTime(), forgedAuthority),
     ]), sourceLimits())
-    const forgedBatch = await forgedSource.scanRecentCompletedTurns(1, 60_000, now)
+    const forgedBatch = await forgedSource.scanRecentCompletedTurns(1, 60_000, now, undefined, ['session-forged-fact'])
     expect(detectSuggestionSeed(
       forgedBatch.sessions[0]!.slices[0]!, '/workspace/forged', 60_000, evidenceLimits(),
     )).toBeNull()
@@ -240,39 +248,48 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
     const now = new Date('2026-09-10T08:00:00.000Z')
     const value = session('session-failing', now.getTime(), procedureEvents(now.getTime()))
     const failing = query([value])
-    failing.listEvents = async () => { throw new Error('backend unavailable') }
+    failing.observeSession = async () => { throw new Error('backend unavailable') }
     const source = new DshSessionSource(failing, sourceLimits())
 
-    await expect(source.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now))
+    await expect(source.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now, undefined, ['session-failing']))
       .rejects.toMatchObject({ code: 'source_unresolvable' })
   })
 
-  it('blocks only the sensitive turn while allowing other recent Sessions to project', async () => {
+  it.each([
+    { content: 'Authorization: Bearer private-session-token', blockedAtSource: true },
+    { content: 'Authorization:\nBearer private-session-token', blockedAtSource: false },
+  ])('isolates sensitive turns even after decoding ($blockedAtSource)', async ({ content, blockedAtSource }) => {
     const now = new Date('2026-09-10T08:00:00.000Z')
     const unsafeEvents = procedureEvents(now.getTime()).map(event => event.seq === 1
-      ? user(1, now.getTime() + 1, 1, 'Authorization: Bearer private-session-token')
+      ? user(1, now.getTime() + 1, 1, content)
       : event)
     const source = new DshSessionSource(query([
       session('session-safe', now.getTime() - 1_000, procedureEvents(now.getTime() - 1_000)),
       session('session-sensitive', now.getTime(), unsafeEvents),
     ]), sourceLimits())
-    const batch = await source.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now)
+    const batch = await source.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now, undefined, ['session-safe', 'session-sensitive'])
     const sensitive = batch.sessions.find(item => item.sessionId === 'session-sensitive')!
     const safe = batch.sessions.find(item => item.sessionId === 'session-safe')!
 
-    expect(sensitive.slices).toEqual([expect.objectContaining({
-      records: [], blockedReason: 'sensitive_content',
-    })])
+    if (blockedAtSource) {
+      expect(sensitive.slices).toEqual([expect.objectContaining({
+        records: [], blockedReason: 'sensitive_content',
+      })])
+      expect(JSON.stringify(batch)).not.toContain('private-session-token')
+    } else {
+      expect(() => detectSuggestionSeed(
+        sensitive.slices[0]!, sensitive.workspaceRoot, 14 * 24 * 60 * 60_000, evidenceLimits(),
+      )).toThrow(expect.objectContaining({ code: 'sensitive_content_unauthorized' }))
+    }
     expect(safe.slices[0]).toMatchObject({ blockedReason: null })
-    expect(JSON.stringify(batch)).not.toContain('private-session-token')
 
     const directory = await mkdtemp(join(tmpdir(), 'experience-projection-sensitive-'))
     cleanup.push(directory)
     const store = await ExperienceProjectionStore.open(join(directory, 'experience.sqlite'))
     const ctx = new Context()
-    const worker = new ExperienceProjectionWorker(ctx, {
-      scanRecentCompletedTurns: vi.fn(async () => batch),
-    } as never, store, {
+    store.requestSession('session-safe', 5)
+    store.requestSession('session-sensitive', 5)
+    const worker = new ExperienceProjectionWorker(ctx, source, store, {
       ...DEFAULT_EXPERIENCE_PROJECTION_POLICY,
       pollIntervalMs: 60_000,
     })
@@ -288,12 +305,204 @@ describe('E1 recent Session segmenter and deterministic detector', () => {
     ]))
     expect(projection.seeds).toHaveLength(1)
     expect(JSON.stringify(projection)).not.toContain('private-session-token')
+    store.requestSession('session-sensitive', 5)
+    await worker.drain(now)
+    expect(store.read().sessions).toContainEqual(expect.objectContaining({
+      sessionId:'session-sensitive', state:'blocked', reason:'sensitive_content_omitted', occurrenceIds:[],
+    }))
+    expect(JSON.stringify(store.readSessionAnalyses())).not.toContain('private-session-token')
     await worker.stop()
     store.close()
   })
 })
 
 describe('E1 disposable projection store and worker', () => {
+  it('expires cached suggestion text together with the inbox while retaining only processed turn digests', async () => {
+    const directory=await mkdtemp(join(tmpdir(),'experience-cache-ttl-'));cleanup.push(directory)
+    const store=await ExperienceProjectionStore.open(join(directory,'experience.sqlite'))
+    try {
+      const seed=sampleSeed();const scan=sampleScan(seed)
+      store.requestSession(scan.sessionId,scan.lastCompletedEndSeq ?? 0);const job=store.nextSessionJob(Date.now())!
+      store.rebuild({...build('sha256:'+'1'.repeat(64),[scan],[seed]),sessionCommit:{job,
+        sourceKey:'opaque',buildKey:'test',analysis:{scan,seeds:[seed],turnDigests:[seed.episodeRef.contentDigest]}}})
+      expect(store.readSessionAnalyses()[0]?.seeds).toEqual([seed])
+      vi.setSystemTime(Date.parse(seed.expiresAt)+1)
+      store.rebuild({...build('sha256:'+'1'.repeat(64),[scan],[seed]),completedAt:new Date().toISOString()})
+      expect(store.read().seeds).toEqual([])
+      expect(store.readSessionAnalyses()).toEqual([{scan:{...scan,occurrenceIds:[]},seeds:[],turnDigests:[seed.episodeRef.contentDigest]}])
+    } finally {store.close()}
+  })
+
+  it('a shorter live TTL removes old cached text without any history scan without rereading the Session', async () => {
+    const directory=await mkdtemp(join(tmpdir(),'experience-cache-live-ttl-'));cleanup.push(directory)
+    const store=await ExperienceProjectionStore.open(join(directory,'experience.sqlite'))
+    const seed=sampleSeed()
+    const recent={...seed,occurrenceId:'occurrence:recent',detectedAt:'2026-09-12T08:00:00.000Z',expiresAt:'2026-09-26T08:00:00.000Z',
+      episodeRef:{...seed.episodeRef,eventStart:6,eventEnd:11,contentDigest:'sha256:'+'b'.repeat(64),
+        occurredAt:{start:'2026-09-12T07:59:00.000Z',end:'2026-09-12T08:00:00.000Z'}}}
+    const scan={...sampleScan(seed),lastEventAt:recent.detectedAt,occurrenceIds:[seed.occurrenceId,recent.occurrenceId]}
+    const turnDigests=[seed.episodeRef.contentDigest,recent.episodeRef.contentDigest]
+    store.requestSession(scan.sessionId,scan.lastCompletedEndSeq ?? 0);const job=store.nextSessionJob(Date.now())!
+    store.rebuild({...build('sha256:'+'8'.repeat(64),[scan],[seed,recent]),sessionCommit:{job,
+      sourceKey:'opaque',buildKey:'before-change',analysis:{scan,seeds:[seed,recent],turnDigests}}})
+    vi.setSystemTime(new Date('2026-09-12T08:00:00.000Z'))
+    const source={listSuggestionSessions:async()=>[{sessionId:scan.sessionId,sourceKey:'opaque',createdAt:0}],
+      scanRecentCompletedTurns:vi.fn(async()=>emptyPoint(scan.sessionId,null))}
+    const values=RuntimeSettingsSchema({suggestionTtlMs:24*60*60_000} as RuntimeSettings)
+    const worker=new ExperienceProjectionWorker(new Context(),source as never,store,
+      DEFAULT_EXPERIENCE_PROJECTION_POLICY,()=>[],async()=>undefined,
+      ()=>({revision:2,digest:'sha256:'+'2'.repeat(64),values}))
+    try {
+      await worker.drain()
+      expect(source.scanRecentCompletedTurns).not.toHaveBeenCalled()
+      expect(store.read().seeds).toEqual([{...recent,expiresAt:'2026-09-13T08:00:00.000Z'}])
+      expect(store.read().groups).toHaveLength(1)
+      expect(store.read().history).toEqual({state:'complete',total:1,remaining:0})
+      expect(store.readSessionAnalyses()).toEqual([{scan:{...scan,occurrenceIds:[recent.occurrenceId]},seeds:[recent],turnDigests}])
+    } finally {await worker.stop();store.close()}
+  })
+
+  it('refreshes semantic decisions when settings or published retrieval change without a new turn', async () => {
+    const directory = await mkdtemp(join(tmpdir(),'experience-semantic-invalidation-')); cleanup.push(directory)
+    const store = await ExperienceProjectionStore.open(join(directory,'experience.sqlite'))
+    const now = new Date(); const source = new DshSessionSource(query([session('semantic-session',now.getTime(),procedureEvents(now.getTime()))]),sourceLimits())
+    let values = RuntimeSettingsSchema({} as RuntimeSettings)
+    let revision = 1
+    const consolidate = vi.fn(async (groups: readonly ExperienceSuggestionGroupView[]) => [...groups])
+    const worker = new ExperienceProjectionWorker(new Context(),source,store,DEFAULT_EXPERIENCE_PROJECTION_POLICY,
+      ()=>[],async()=>undefined,()=>({revision,digest:'sha256:'+String(revision).repeat(64),values}),consolidate)
+    try {
+      store.requestSession('semantic-session',5)
+      await worker.drain(); const first = store.read()
+      expect(first.groups).toHaveLength(1); expect(consolidate).toHaveBeenCalledTimes(1)
+      vi.setSystemTime(Date.now()+60_000); await worker.drain()
+      expect(consolidate).toHaveBeenCalledTimes(1)
+      values = RuntimeSettingsSchema({...values,equivalenceSimilarityThreshold:0.9}); revision=2
+      vi.setSystemTime(Date.now()+60_000); await worker.drain()
+      expect(consolidate).toHaveBeenCalledTimes(2)
+      store.rebuildRetrieval({projectionVersion:'experience-retrieval-projector-v2',sourceWatermarkDigest:'sha256:'+'3'.repeat(64),
+        operationSettingsRevision:null,operationSettingsDigest:'sha256:'+'4'.repeat(64),provider:'disabled',providerState:'disabled',
+        model:null,documents:[],vectors:null,failureCode:null,builtAt:new Date().toISOString()})
+      vi.setSystemTime(Date.now()+60_000); await worker.drain()
+      expect(consolidate).toHaveBeenCalledTimes(3)
+      expect(store.read().groups.map(group=>group.suggestionGroupId)).toEqual(first.groups.map(group=>group.suggestionGroupId))
+    } finally { await worker.stop(); store.close() }
+  })
+
+  it('a real turn/end targets its own Session and never enumerates unrelated history', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'experience-targeted-wake-'))
+    cleanup.push(directory)
+    const store = await ExperienceProjectionStore.open(join(directory, 'experience.sqlite'))
+    const now = new Date()
+    const log = session('session-target', now.getTime(), procedureEvents(now.getTime()))
+    const q = query([log])
+    const listed = vi.spyOn(q, 'listSessions')
+    const observed = vi.spyOn(q, 'observeSession')
+    const source = new DshSessionSource(q, sourceLimits())
+    const ctx = new Context()
+    const worker = new ExperienceProjectionWorker(ctx, source, store, DEFAULT_EXPERIENCE_PROJECTION_POLICY)
+    worker.install()
+    try {
+      ctx.emit('session/event', { id: SessionId('session-target') } as never,
+        turnEnd(5, now.getTime() + 5, 1))
+      await vi.waitFor(() => expect(store.read().seeds).toHaveLength(1))
+      expect(listed).not.toHaveBeenCalled()
+      expect(observed.mock.calls.map(([id]) => String(id))).toEqual(['session-target'])
+    } finally {
+      await ctx.fiber.dispose()
+      store.close()
+    }
+  })
+
+  it('finishes one notified slow point read, then maintains results without listing or rereading history', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'experience-slow-poll-'))
+    cleanup.push(directory)
+    const store = await ExperienceProjectionStore.open(join(directory, 'experience.sqlite'))
+    const ctx = new Context()
+    const gate = Promise.withResolvers<void>()
+    const source = {
+      listSuggestionSessions: vi.fn(async () => [{sessionId:'probe', sourceKey:'fixed', createdAt:0}]),
+      scanRecentCompletedTurns: vi.fn(async () => {
+        await gate.promise
+        return emptyPoint('probe', 'fixed')
+      }),
+    }
+    const worker = new ExperienceProjectionWorker(ctx, source, store, DEFAULT_EXPERIENCE_PROJECTION_POLICY)
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    try {
+      worker.install()
+      store.requestSession('probe',0)
+      const initial = worker.drain()
+      await vi.advanceTimersByTimeAsync(90_000)
+      expect(source.scanRecentCompletedTurns).toHaveBeenCalledTimes(1)
+      gate.resolve()
+      await initial
+      expect(source.scanRecentCompletedTurns).toHaveBeenCalledTimes(1)
+      expect(store.read().state).toBe('ready')
+      const catalogueCalls = source.listSuggestionSessions.mock.calls.length
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect(source.listSuggestionSessions.mock.calls.length).toBe(catalogueCalls)
+      expect(source.scanRecentCompletedTurns).toHaveBeenCalledTimes(1)
+      expect(store.read().history).toEqual({state:'complete', total:1, remaining:0})
+    } finally {
+      gate.resolve()
+      await ctx.fiber.dispose()
+      await worker.stop()
+      store.close()
+      vi.useRealTimers()
+    }
+  })
+
+  it.each(['history', 'retrieval', 'consolidation'])('cancels in-flight %s work on disposal without replacing the last good generation', async phase => {
+    const directory = await mkdtemp(join(tmpdir(), 'experience-cancel-scan-'))
+    cleanup.push(directory)
+    const store = await ExperienceProjectionStore.open(join(directory, 'experience.sqlite'))
+    const seed = sampleSeed()
+    store.rebuild(build('sha256:' + '1'.repeat(64), [sampleScan(seed)], [seed]))
+    const previous = store.read()
+    const started = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    let scanSignal: AbortSignal | undefined
+    const block = async (signal?: AbortSignal) => {
+      scanSignal = signal
+      started.resolve()
+      await Promise.race([release.promise, new Promise<void>((_resolve, reject) => {
+        signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
+      })])
+      signal?.throwIfAborted()
+    }
+    const source = {
+      listSuggestionSessions: async () => [{sessionId:'probe', sourceKey:'fixed', createdAt:0}],
+      scanRecentCompletedTurns: async (_limit: number, _ttl: number, _now: Date, signal?: AbortSignal) => {
+        if (phase === 'history') await block(signal)
+        return emptyPoint('probe', 'fixed')
+      },
+    }
+    const ctx = new Context()
+    const worker = new ExperienceProjectionWorker(ctx, source, store, DEFAULT_EXPERIENCE_PROJECTION_POLICY,
+      () => [], async signal => { if (phase === 'retrieval') await block(signal) }, undefined,
+      async (groups, signal) => { if (phase === 'consolidation') await block(signal); return [...groups] })
+    worker.install()
+    store.requestSession('probe',0)
+    const initial = worker.drain().catch(() => undefined)
+    await started.promise
+    try {
+      const disposed = ctx.fiber.dispose().then(() => true)
+      const bounded = await Promise.race([disposed, new Promise<boolean>(resolve => setTimeout(() => resolve(false), 100))])
+      expect(bounded).toBe(true)
+      expect(scanSignal?.aborted).toBe(true)
+      await initial
+      // Successful catalogue discovery must retain pending work on shutdown.
+      expect(store.read()).toEqual({...previous, history: {state:'running', total:1, remaining:1}})
+      if (phase !== 'retrieval') expect(store.nextSessionJob(Date.now())).toMatchObject({sessionId:'probe', analysis:null})
+    } finally {
+      release.resolve()
+      await worker.stop()
+      await ctx.fiber.dispose()
+      store.close()
+    }
+  })
+
   it('atomically activates, deduplicates unchanged rebuilds, survives restart, and rolls back a failed generation', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'experience-projection-store-'))
     cleanup.push(directory)
@@ -791,6 +1000,7 @@ describe('E1 disposable projection store and worker', () => {
     const seed = sampleSeed()
     let fail = false
     const source = {
+      listSuggestionSessions: async () => [{sessionId:seed.sessionId, sourceKey:null, createdAt:0}],
       scanRecentCompletedTurns: vi.fn(async () => {
         if (fail) throw new Error('private backend detail')
         return {
@@ -811,10 +1021,13 @@ describe('E1 disposable projection store and worker', () => {
       ...DEFAULT_EXPERIENCE_PROJECTION_POLICY,
       pollIntervalMs: 60_000,
     })
+    store.requestSession(seed.sessionId,seed.episodeRef.eventEnd)
     await worker.drain(new Date('2026-09-10T08:00:00.000Z'))
     const goodGeneration = store.read().generation
+    vi.setSystemTime(new Date('2026-09-10T10:01:00.000Z'))
     fail = true
-    const degraded = await worker.drain(new Date('2026-09-10T08:01:00.000Z'))
+    store.requestSession(seed.sessionId,seed.episodeRef.eventEnd)
+    const degraded = await worker.drain()
     expect(degraded).toMatchObject({
       generation: goodGeneration,
       state: 'degraded',
@@ -822,8 +1035,9 @@ describe('E1 disposable projection store and worker', () => {
       latestReceipt: { status: 'failed', reason: 'recent Session source unavailable' },
     })
     expect(JSON.stringify(degraded)).not.toContain('private backend detail')
+    vi.setSystemTime(new Date('2026-09-10T10:02:00.000Z'))
     fail = false
-    const recovered = await worker.drain(new Date('2026-09-10T08:02:00.000Z'))
+    const recovered = await worker.drain()
     expect(recovered).toMatchObject({ generation: goodGeneration, state: 'ready' })
     await worker.stop()
     store.close()
@@ -835,6 +1049,7 @@ describe('E1 disposable projection store and worker', () => {
     const store = await ExperienceProjectionStore.open(join(directory, 'experience.sqlite'))
     const ctx = new Context()
     const worker = new ExperienceProjectionWorker(ctx, {
+      listSuggestionSessions: async () => [],
       scanRecentCompletedTurns: vi.fn(async () => ({
         sourceWatermarkDigest: 'sha256:' + 'd'.repeat(64), sessions: [],
       })),
@@ -855,9 +1070,8 @@ describe('E1 disposable projection store and worker', () => {
     store.rebuild(build('sha256:' + '9'.repeat(64), [sampleScan(existingSeed)], [existingSeed]))
     expect(store.read().seeds).toHaveLength(1)
     const ctx = new Context()
-    const source = { scanRecentCompletedTurns: vi.fn(async () => ({
-      sourceWatermarkDigest: 'sha256:' + '8'.repeat(64), sessions: [],
-    })) }
+    const source = {listSuggestionSessions: async () => [{sessionId:'probe',sourceKey:null,createdAt:0}],
+      scanRecentCompletedTurns: vi.fn(async () => emptyPoint('probe',null))}
     let values = RuntimeSettingsSchema({ automaticSuggestionDetection: false } as RuntimeSettings)
     const worker = new ExperienceProjectionWorker(
       ctx,
@@ -878,9 +1092,11 @@ describe('E1 disposable projection store and worker', () => {
       recentSuggestionSessionLimit: 3,
       suggestionTtlMs: 2 * 24 * 60 * 60_000,
     } as RuntimeSettings)
+    store.requestSession('probe',0)
     await worker.drain(new Date('2026-09-10T08:01:00.000Z'))
-    expect(source.scanRecentCompletedTurns).toHaveBeenCalledWith(3, 2 * 24 * 60 * 60_000,
-      new Date('2026-09-10T08:01:00.000Z'))
+    expect(source.scanRecentCompletedTurns).toHaveBeenCalledWith(1, 2 * 24 * 60 * 60_000,
+      new Date('2026-09-10T08:01:00.000Z'), expect.any(AbortSignal), ['probe'], [0])
+    expect(store.read().sessions.length).toBeLessThanOrEqual(3)
     await worker.stop()
     store.close()
   })
@@ -891,9 +1107,10 @@ describe('E1 disposable projection store and worker', () => {
     const now = new Date('2026-09-10T08:00:00.000Z')
     const log = session('session-wake', now.getTime(), procedureEvents(now.getTime()))
     const dshSource = new DshSessionSource(query([log]), sourceLimits())
-    const scanned = await dshSource.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now)
+    const scanned = await dshSource.scanRecentCompletedTurns(8, 14 * 24 * 60 * 60_000, now, undefined, ['session-wake'])
     let visible = false
     const source = {
+      listSuggestionSessions: async () => [],
       scanRecentCompletedTurns: vi.fn(async () => visible ? scanned : {
         sourceWatermarkDigest: 'sha256:' + '0'.repeat(64), sessions: [],
       }),
@@ -909,8 +1126,8 @@ describe('E1 disposable projection store and worker', () => {
     expect(store.read().seeds).toEqual([])
 
     visible = true
-    ctx.emit('session/event', {} as never, turnEnd(20, now.getTime() + 20, 2))
-    ctx.emit('session/event', {} as never, turnEnd(20, now.getTime() + 20, 2))
+    ctx.emit('session/event', {id:SessionId('session-wake')} as never, turnEnd(5, now.getTime() + 5, 1))
+    ctx.emit('session/event', {id:SessionId('session-wake')} as never, turnEnd(5, now.getTime() + 5, 1))
     await vi.waitFor(() => expect(store.read().seeds).toHaveLength(1))
     const projected = store.read()
     expect(projected).toMatchObject({
@@ -942,13 +1159,24 @@ function session(id: string, createdAt: number, events: readonly SessionEvent[])
 
 function query(
   sessions: readonly SessionLogSnapshot[],
-  calls: { listSessions: number; listEvents: number; readSession: number; readEvent: number } = {
-    listSessions: 0, listEvents: 0, readSession: 0, readEvent: 0,
+  calls: { listSessions: number; listEvents: number; readSession: number; readEvent: number; observations: number; disposed: number } = {
+    listSessions: 0, listEvents: 0, readSession: 0, readEvent: 0, observations: 0, disposed: 0,
   },
 ) {
   const byId = new Map(sessions.map(value => [String(value.session.id), value]))
   return {
-    observeSession: async () => { throw new Error('not used') },
+    observeSession: async (id: SessionId, options?: { signal?: AbortSignal }): Promise<SessionObservation> => {
+      options?.signal?.throwIfAborted()
+      calls.observations++
+      const value = byId.get(String(id))!
+      let disposed = false
+      return {
+        source: 'prepared', header: value.session, events: value.events,
+        inheritedEventCount: value.inheritedEventCount, cursor: value.events.at(-1)?.seq ?? -1,
+        retain: () => { throw new Error('not used') },
+        [Symbol.dispose]: () => { if (!disposed) { disposed = true; calls.disposed++ } },
+      }
+    },
     listSessions: async (): Promise<SessionRecord[]> => {
       calls.listSessions++
       return sessions.map(value => ({ header: value.session, live: false, persisted: true }))
@@ -1190,4 +1418,11 @@ function build(
 
 function withSuggestionDigests(group: ExperienceSuggestionGroupView): ExperienceSuggestionGroupView {
   return { ...group, ...suggestionDecisionDigests(group) }
+}
+
+function emptyPoint(id: string, sourceKey: string | null) {
+  return {sourceWatermarkDigest:'sha256:'+'0'.repeat(64),sessions:[{
+    sessionId:id,sourceKey,workspaceRoot:null,sessionCreatedAt:'2026-09-10T08:00:00.000Z',lastEventAt:null,
+    capturedThroughSeq:0,lastCompletedEndSeq:null,slices:[],
+  }]}
 }

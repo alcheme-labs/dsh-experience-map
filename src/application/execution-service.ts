@@ -240,7 +240,7 @@ export class ExperienceExecutionService {
         usageId: active.usageId,
         callId,
         resultEventSeq: event.seq,
-        resultState: event.data.message.content[0].isError === true || pending?.isError !== false ? 'failure' : 'success',
+        resultState: event.data.message.isError === true || pending?.isError !== false ? 'failure' : 'success',
         externalEffectState,
         effectRef: effect,
       })

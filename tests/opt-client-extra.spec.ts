@@ -24,7 +24,7 @@ beforeAll(async () => {
     plugins: [{ name: 'test-runtime', setup(b) {
       b.onResolve({ filter: /^react(?:\/.*)?$/ }, a => ({ path: require.resolve(a.path), external: true }))
       b.onResolve({ filter: /^@deepseek-ai\/dsh-client-ui-primitives$/ }, () => ({ path: 'primitives', namespace: 'review' }))
-      b.onLoad({ filter: /.*/, namespace: 'review' }, () => ({ contents: 'export const Button=({children})=>children;export const Pill=Button;export const StateDot=Button;export const IconCheckOutline14=()=>null;export const IconRefreshOutline14=()=>null;export const IconCloseOutline16=()=>null;export const IconPanelLeftOutline16=()=>null;', loader: 'jsx' }))
+      b.onLoad({ filter: /.*/, namespace: 'review' }, () => ({ contents: 'export const Button=({children})=>children;export const Pill=Button;export const StateDot=Button;export const IconCheckOutlineRegular=()=>null;export const IconRefreshOutlineRegular=()=>null;export const IconCloseOutlineRegular=()=>null;export const IconPanelLeftOutlineRegular=()=>null;', loader: 'jsx' }))
       b.onLoad({ filter: /\.css$/ }, () => ({ contents: 'export default {}', loader: 'js' }))
     } }],
   })

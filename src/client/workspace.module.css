@@ -532,6 +532,19 @@
   white-space: nowrap;
 }
 
+.candidateButton.managementSectionButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.managementSectionButton > span {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .candidateMeta {
   color: var(--dsw-alias-label-caption);
   font-size: 11px;
