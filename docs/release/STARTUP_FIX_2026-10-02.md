@@ -76,3 +76,8 @@ Status: requested documentation updates, public source synchronization and npm p
 ## 2026-10-03: default npm install tag
 
 At `2026-10-02T23:01:44.874Z`, npm `latest` was promoted from `0.1.0-beta.3` to the existing `0.1.0-beta.6`; `beta` remains `0.1.0-beta.6`. Anonymous public Registry readback confirms both tags, the unchanged beta.6 SHA-512 integrity above, and continued availability of beta.3. There was no rebuild, package republish, or GitHub Release creation. DSH `0.1.5-rc.2` users must explicitly pin `dsh-experience-map@0.1.0-beta.3`; default installs now target DSH `0.2.0-rc.2`. Earlier tag observations in this document describe their original publication times. Evidence: `/private/tmp/experience-latest-promotion-readback.json`. Temporary npm authentication was removed.
+
+
+## 2026-10-03: GitHub prerelease and compatibility table
+
+The user explicitly authorized the additional GitHub Release. Published [v0.1.0-beta.6](https://github.com/alcheme-labs/dsh-experience-map/releases/tag/v0.1.0-beta.6) as a prerelease, after checking the draft asset against the npm artifact. Both channels serve the same 1,218,098-byte package, SHA-256 `50d22d4cb5d9d00f80ae255de8c13fe14686aa14bf4ed4ab4c033e14b73c7b06`; GitHub reports the matching asset digest. Public release readback confirms `draft=false` and `prerelease=true`. Bilingual repository README and Release notes list beta.3 / DSH 0.1.5-rc.2 and beta.6 / DSH 0.2.0-rc.2. The published npm README already contains both pairs in text; adding the new table to npm requires a future package version. No npm republish or tag change occurred in this follow-up. Evidence: `/private/tmp/experience-beta6-github-readback.json`.

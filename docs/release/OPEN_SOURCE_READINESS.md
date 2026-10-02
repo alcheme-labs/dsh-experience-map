@@ -1,6 +1,6 @@
 # Open-source readiness
 
-Status: **public main and npm `0.1.0-beta.6` are published and read back. npm `latest` and `beta` both point to beta.6. This publication updates the public source and npm package; it does not create a new GitHub Release. The DSH community listing remains pending.** The private development Git history must never be published.
+Status: **public main and npm `0.1.0-beta.6` are published and read back. npm `latest` and `beta` both point to beta.6. The matching GitHub prerelease `v0.1.0-beta.6` is published; its attached package is byte-identical to npm. The DSH community listing remains pending.** The private development Git history must never be published.
 
 ## Release boundary
 
@@ -44,7 +44,7 @@ The community post must remain visibly labelled unofficial and include the proje
 | Functional verification | Typecheck, unit/integration tests, build, docs tests, package check | Current beta.6 results in [the consolidated release evidence](STARTUP_FIX_2026-10-02.md); earlier measurements remain dated in `evidence/release/package-validation.json` |
 | Product evidence | Exact task, treatment, measurements, raw-log privacy boundary, and non-claims | `docs/release/BENEFIT_EVIDENCE.md` |
 | Community health | Contribution, conduct, support, security, changelog, CI, issue and PR templates | Present in clean snapshot |
-| External publication | Public Git remote, npm Registry, and GitHub Release readback | Public main and npm beta.6 read back; public tarball is byte-identical to the frozen artifact. Earlier matching GitHub/npm beta.3 artifacts remain immutable; community listing pending |
+| External publication | Public Git remote, npm Registry, and GitHub Release readback | Public main, npm beta.6, and GitHub prerelease v0.1.0-beta.6 read back; GitHub/npm tarballs are byte-identical to the frozen artifact. Earlier beta.3 artifacts remain immutable; community listing pending |
 
 ## Published artifact immutability
 
