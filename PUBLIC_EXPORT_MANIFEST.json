@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "953a122c3f7684ca6d7a27ee1db5a01adfcbbb11",
+  "sourceCommit": "c5fa896af8ae42c87ce32424c435a2b57758102a",
   "sourceTreeDirty": false,
   "fileCount": 234,
   "files": [
@@ -191,13 +191,13 @@
     },
     {
       "path": "docs/release/OPEN_SOURCE_READINESS.md",
-      "bytes": 7556,
-      "sha256": "1bbfec77c2c4ddb16a249d5a9d8e4aabcdeb7001edb44505cb0d7ccaf77b17e6"
+      "bytes": 7876,
+      "sha256": "5d138b49c1bf2980c50d342f1ed9bfc6f08218a590c28d91d5e4965d44a2c740"
     },
     {
       "path": "docs/release/STARTUP_FIX_2026-10-02.md",
-      "bytes": 12723,
-      "sha256": "55083f184ba3f29b2cf9593acdfe3dc12b559f63254364476c9518a5b6f66e3a"
+      "bytes": 14773,
+      "sha256": "5fc7859e9ccafcc3143ac7e4407e822b2219b12aab6388b864039ea6f069fcff"
     },
     {
       "path": "evidence/auto/e0/benchmark-offline-node22.json",

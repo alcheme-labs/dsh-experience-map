@@ -1,6 +1,6 @@
 # Open-source readiness
 
-Status: **the public baseline is beta.3; beta.4 and beta.5 were published on npm for DSH 0.2.0-rc.2. Beta.6 is the current release candidate awaiting final publication/readback. The DSH community listing remains pending.** The private development Git history must never be published.
+Status: **public main and npm `0.1.0-beta.6` are published and read back. npm `beta` points to beta.6; `latest` remains beta.3. This publication updates the public source and npm package; it does not create a new GitHub Release. The DSH community listing remains pending.** The private development Git history must never be published.
 
 ## Release boundary
 
@@ -37,14 +37,14 @@ The community post must remain visibly labelled unofficial and include the proje
 | --- | --- | --- |
 | Sensitive-history audit | No direct publication of private history | Passed by clean-export boundary; direct publication prohibited |
 | Public snapshot allowlist | Raw Sessions, credentials, databases, local homes, internal evidence, and absolute user paths excluded | Automated by export and release checks |
-| Secret scan | No unresolved finding in the exported snapshot | Recorded in `evidence/release/security-audit.json` |
+| Secret scan | No unresolved finding in the exported snapshot | Current public snapshot and eight-commit public history scans pass; prior audit retained in `evidence/release/security-audit.json` |
 | Production dependency audit | No high-severity advisory in default installed dependencies | Transformers.js removed from automatic installation; audit result recorded |
 | Optional semantic runtime | Explicit installation and risk disclosure | Optional peer; disabled by default |
 | Package contents | Only built runtime, bilingual README, license, security policy, notices, and patch | Automated dry-run inspection |
-| Functional verification | Typecheck, unit/integration tests, build, docs tests, package check | Recorded in `evidence/release/package-validation.json` |
+| Functional verification | Typecheck, unit/integration tests, build, docs tests, package check | Current beta.6 results in [the consolidated release evidence](STARTUP_FIX_2026-10-02.md); earlier measurements remain dated in `evidence/release/package-validation.json` |
 | Product evidence | Exact task, treatment, measurements, raw-log privacy boundary, and non-claims | `docs/release/BENEFIT_EVIDENCE.md` |
 | Community health | Contribution, conduct, support, security, changelog, CI, issue and PR templates | Present in clean snapshot |
-| External publication | Public Git remote, npm Registry, and GitHub Release readback | Public repository plus matching npm and GitHub `v0.1.0-beta.3` artifacts read back; community listing pending |
+| External publication | Public Git remote, npm Registry, and GitHub Release readback | Public main and npm beta.6 read back; public tarball is byte-identical to the frozen artifact. Earlier matching GitHub/npm beta.3 artifacts remain immutable; community listing pending |
 
 ## Published artifact immutability
 
